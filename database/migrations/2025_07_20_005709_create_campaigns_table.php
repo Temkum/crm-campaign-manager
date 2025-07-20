@@ -12,18 +12,18 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100)->unique()->index();
             $table->foreignId('operator_id')
-                  ->constrained('operators')
-                  ->onDelete('cascade')
-                  ->name('campaigns_operator_id_foreign')
-                  ->index();
+                ->constrained('operators')
+                ->onDelete('cascade')
+                ->name('campaigns_operator_id_foreign')
+                ->index();
             $table->foreignId('market_id')
-                  ->constrained('markets')
-                  ->onDelete('cascade')
-                  ->name('campaigns_market_id_foreign')
-                  ->index();
+                ->constrained('markets')
+                ->onDelete('cascade')
+                ->name('campaigns_market_id_foreign')
+                ->index();
             $table->timestamp('start_at')->nullable()->index();
             $table->timestamp('end_at')->nullable()->index();
-            $table->enum('status', ['active', 'inactive', 'paused', 'pending'])->default('inactive')->index();
+            $table->enum('status', ['active', 'disabled', 'paused', 'scheduled', 'completed'])->default('active')->index();
             $table->unsignedInteger('priority')->default(0)->index();
             $table->unsignedInteger('duration')->default(0)->index();
             $table->unsignedInteger('rotation_delay')->default(0)->index();

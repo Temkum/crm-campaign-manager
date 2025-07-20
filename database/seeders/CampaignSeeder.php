@@ -18,7 +18,7 @@ class CampaignSeeder extends Seeder
         $faker = Factory::create();
 
         $campaigns = [];
-        $statuses = ['active', 'inactive', 'pending', 'paused'];
+        $statuses = ['active', 'disabled', 'paused', 'scheduled', 'completed'];
 
         // get existing market and operator
         $operatorIds = DB::table('operators')->pluck('id');
