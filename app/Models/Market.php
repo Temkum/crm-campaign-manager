@@ -9,13 +9,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Market extends Model
 {
     use SoftDeletes;
-    protected $fillable = ['name', 'iso_code'];
+
+    protected $fillable = [
+        'name',
+        'country_code',
+        'currency',
+        'timezone',
+        'status',
+    ];
 
     /**
-     * @return BelongsToMany<Website, $this>
+     * @phpstan-return HasMany<Campaign>
      */
-    public function websites(): BelongsToMany
+    public function campaigns(): HasMany
     {
-        return $this->belongsToMany(Website::class);
+        return $this->hasMany(Campaign::class);
     }
 }

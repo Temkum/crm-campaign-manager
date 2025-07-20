@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use App\Enums\CampaignStatusEnum;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 #[Layout('layouts.app')]
 class CampaignManager extends Component
@@ -24,7 +25,7 @@ class CampaignManager extends Component
     public $market_id = '';
     public $start_at = '';
     public $end_at = '';
-    public $status = 'draft';
+    public $status = 'disabled';
     public $priority = 1;
     public $duration = '';
     public $rotation_delay = '';
@@ -44,6 +45,7 @@ class CampaignManager extends Component
 
     // UI state
     public $isEdit = false;
+    public $campaign_id = null;
 
     protected function rules()
     {
@@ -54,7 +56,7 @@ class CampaignManager extends Component
             'market_id' => 'required|exists:markets,id',
             'start_at' => 'required|date|after_or_equal:today',
             'end_at' => 'required|date|after:start_at',
-            'status' => ['nullable', Rule::in($this->status_options)],
+            'status' => ['nullable', Rule::in(array_keys($this->status_options))],
             'priority' => 'required|integer|min:1|max:10',
             'duration' => 'nullable|integer|min:1',
             'rotation_delay' => 'nullable|integer|min:0',
@@ -99,13 +101,14 @@ class CampaignManager extends Component
         ];
     }
 
-    public function mount($campaignId = null)
+    public function mount($campaign_id = null)
     {
+        $this->campaign_id = $campaign_id;
         $this->loadDropdownData();
 
-        if ($campaignId) {
+        if ($campaign_id) {
             $this->isEdit = true;
-            $this->loadCampaign($campaignId);
+            $this->loadCampaign($campaign_id);
         } else {
             $this->initializeEmptyForm();
         }
@@ -113,53 +116,72 @@ class CampaignManager extends Component
 
     protected function loadDropdownData()
     {
-        $this->operators = Operator::select('id', 'name')->get()->toArray();
-        $this->markets = Market::select('id', 'name')->get()->toArray();
-        $this->availableWebsites = Website::select('id', 'url', 'type')->get()->toArray();
+        $this->operators = Operator::select('id', 'name')->orderBy('name')->get()->toArray();
+        $this->markets = Market::select('id', 'name')->orderBy('name')->get()->toArray();
+        $this->availableWebsites = Website::select('id', 'url', 'type')->orderBy('url')->get()->toArray();
         $this->status_options = CampaignStatusEnum::getSelectOptions();
     }
 
-    protected function loadCampaign($campaignId)
+    protected function loadCampaign(int $campaign_id)
     {
-        $this->campaign = Campaign::with(['campaignWebsites.website', 'campaignTriggers'])
-            ->findOrFail($campaignId);
+        try {
+            $this->campaign = Campaign::with(['campaignWebsites.website', 'campaignTriggers'])
+                ->findOrFail($campaign_id);
 
-        // Load campaign core fields
-        $this->name = $this->campaign->name;
-        $this->operator_id = $this->campaign->operator_id;
-        $this->market_id = $this->campaign->market_id;
-        $this->start_at = $this->campaign->start_at?->format('Y-m-d\TH:i');
-        $this->end_at = $this->campaign->end_at?->format('Y-m-d\TH:i');
-        $this->status = $this->campaign->status;
-        $this->priority = $this->campaign->priority;
-        $this->duration = $this->campaign->duration;
-        $this->rotation_delay = $this->campaign->rotation_delay;
-        $this->dom_selector = $this->campaign->dom_selector;
+            // Load campaign core fields
+            $this->name = $this->campaign->name ?? '';
+            $this->operator_id = (string) $this->campaign->operator_id;
+            $this->market_id = (string) $this->campaign->market_id;
+            $this->start_at = $this->campaign->start_at?->format('Y-m-d\TH:i') ?? '';
+            $this->end_at = $this->campaign->end_at?->format('Y-m-d\TH:i') ?? '';
+            $this->status = $this->campaign->status ?? 'disabled';
+            $this->priority = $this->campaign->priority ?? 1;
+            $this->duration = $this->campaign->duration ? (string) $this->campaign->duration : '';
+            $this->rotation_delay = $this->campaign->rotation_delay ? (string) $this->campaign->rotation_delay : '';
+            $this->dom_selector = $this->campaign->dom_selector ?? '';
 
-        // Load websites
-        $this->websites = $this->campaign->campaignWebsites->map(function ($website) {
-            return [
-                'id' => $website->id,
-                'website_id' => $website->website_id,
-                'priority' => $website->priority,
-                'dom_selector' => $website->dom_selector,
-                'custom_affiliate_url' => $website->custom_affiliate_url,
-                'timer_offset' => $website->timer_offset,
-            ];
-        })->toArray();
+            // Load websites
+            if ($this->campaign->campaignWebsites->count() > 0) {
+                $this->websites = $this->campaign->campaignWebsites->map(function ($website) {
+                    return [
+                        'id' => $website->id,
+                        'website_id' => (string) $website->website_id,
+                        'priority' => $website->priority,
+                        'dom_selector' => $website->dom_selector ?? '',
+                        'custom_affiliate_url' => $website->custom_affiliate_url ?? '',
+                        'timer_offset' => $website->timer_offset ? (string) $website->timer_offset : '',
+                    ];
+                })->toArray();
+            } else {
+                $this->initializeEmptyWebsites();
+            }
 
-        // Load triggers
-        $this->triggers = $this->campaign->campaignTriggers->map(function ($trigger) {
-            return [
-                'id' => $trigger->id,
-                'type' => $trigger->type,
-                'value' => $trigger->value,
-                'operator' => $trigger->operator,
-            ];
-        })->toArray();
+            // Load triggers
+            if ($this->campaign->campaignTriggers->count() > 0) {
+                $this->triggers = $this->campaign->campaignTriggers->map(function ($trigger) {
+                    return [
+                        'id' => $trigger->id,
+                        'type' => $trigger->type,
+                        'value' => $trigger->value,
+                        'operator' => $trigger->operator,
+                    ];
+                })->toArray();
+            } else {
+                $this->initializeEmptyTriggers();
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Campaign not found or could not be loaded.');
+            return redirect()->route('campaigns.index');
+        }
     }
 
     protected function initializeEmptyForm()
+    {
+        $this->initializeEmptyWebsites();
+        $this->initializeEmptyTriggers();
+    }
+
+    protected function initializeEmptyWebsites()
     {
         $this->websites = [
             [
@@ -170,7 +192,10 @@ class CampaignManager extends Component
                 'timer_offset' => '',
             ]
         ];
+    }
 
+    protected function initializeEmptyTriggers()
+    {
         $this->triggers = [
             [
                 'type' => '',
@@ -219,25 +244,43 @@ class CampaignManager extends Component
     // Live validation methods
     public function updated($propertyName)
     {
-        $this->validateOnly($propertyName);
+        // Skip validation for certain properties to avoid issues
+        if (str_contains($propertyName, '.')) {
+            $this->validateOnly($propertyName);
+        } else {
+            $this->validateOnly($propertyName);
+        }
     }
 
     public function submit()
     {
-        $this->validate();
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('scrollToFirstError'); // Livewire 3 event
+            throw $e; // Re-throw to show errors
+        }
 
-        DB::transaction(function () {
-            if ($this->isEdit) {
-                $this->updateCampaign();
-            } else {
-                $this->createCampaign();
-            }
-        });
+        try {
+            DB::transaction(function () {
+                if ($this->isEdit) {
+                    $this->updateCampaign();
+                } else {
+                    $this->createCampaign();
+                }
+            });
 
-        $message = $this->isEdit ? 'Campaign updated successfully!' : 'Campaign created successfully!';
-        session()->flash('success', $message);
+            $message = $this->isEdit ? 'Campaign updated successfully!' : 'Campaign created successfully!';
+            session()->flash('success', $message);
 
-        return redirect()->route('campaigns.index');
+            return redirect()->route('campaigns.index');
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while saving the campaign. Please try again.');
+            Log::error($e);
+
+            // Dispatch event to scroll to first error
+            $this->dispatch('scrollToFirstError');
+        }
     }
 
     protected function createCampaign()
@@ -285,27 +328,37 @@ class CampaignManager extends Component
     protected function saveCampaignWebsites($campaign)
     {
         foreach ($this->websites as $website) {
-            CampaignWebsite::create([
-                'campaign_id' => $campaign->id,
-                'website_id' => $website['website_id'],
-                'priority' => $website['priority'],
-                'dom_selector' => $website['dom_selector'] ?: null,
-                'custom_affiliate_url' => $website['custom_affiliate_url'] ?: null,
-                'timer_offset' => $website['timer_offset'] ?: null,
-            ]);
+            if (!empty($website['website_id'])) {
+                CampaignWebsite::create([
+                    'campaign_id' => $campaign->id,
+                    'website_id' => $website['website_id'],
+                    'priority' => $website['priority'],
+                    'dom_selector' => $website['dom_selector'] ?: null,
+                    'custom_affiliate_url' => $website['custom_affiliate_url'] ?: null,
+                    'timer_offset' => $website['timer_offset'] ?: null,
+                ]);
+            }
         }
     }
 
     protected function saveCampaignTriggers($campaign)
     {
         foreach ($this->triggers as $trigger) {
-            CampaignTrigger::create([
-                'campaign_id' => $campaign->id,
-                'type' => $trigger['type'],
-                'value' => $trigger['value'],
-                'operator' => $trigger['operator'],
-            ]);
+            if (!empty($trigger['type']) && !empty($trigger['value']) && !empty($trigger['operator'])) {
+                CampaignTrigger::create([
+                    'campaign_id' => $campaign->id,
+                    'type' => $trigger['type'],
+                    'value' => $trigger['value'],
+                    'operator' => $trigger['operator'],
+                ]);
+            }
         }
+    }
+
+    // Helper method to get current campaign for debugging
+    public function getCurrentCampaign()
+    {
+        return $this->campaign;
     }
 
     public function render()
