@@ -66,9 +66,9 @@ class CampaignManager extends Component
             'websites' => 'array|min:1',
             'websites.*.website_id' => 'required|exists:websites,id',
             'websites.*.priority' => 'required|integer|min:1|max:10',
-            'websites.*.dom_selector' => 'nullable|string|max:255',
+            'websites.*.dom_selector' => 'required|string|max:255',
             'websites.*.custom_affiliate_url' => 'nullable|url|max:500',
-            'websites.*.timer_offset' => 'nullable|integer|min:0',
+            'websites.*.timer_offset' => 'required|integer|min:1',
 
             // Campaign triggers validation
             'triggers' => 'array|min:1',
@@ -94,6 +94,9 @@ class CampaignManager extends Component
             'websites.*.priority.min' => 'Priority must be at least 1.',
             'websites.*.priority.max' => 'Priority cannot exceed 10.',
             'websites.*.custom_affiliate_url.url' => 'Please enter a valid URL.',
+            'websites.*.timer_offset.required' => 'Timer offset is required.',
+            'websites.*.timer_offset.min' => 'Timer offset must be at least 1.',
+            'websites.*.dom_selector.required' => 'DOM selector is required.',
             'triggers.min' => 'At least one trigger is required.',
             'triggers.*.type.required' => 'Trigger type is required.',
             'triggers.*.value.required' => 'Trigger value is required.',
