@@ -12,7 +12,7 @@
     <form wire:submit="submit" class="space-y-8">
         <!-- Campaign Core Information -->
         <div class="bg-gray-50 p-6 rounded-lg">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Campaign Information</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">{{ __('Campaign Information') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Campaign Name -->
@@ -31,11 +31,11 @@
                 <!-- Operator -->
                 <div>
                     <label for="operator_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Operator *
+                        {{ __('Operator') }} *
                     </label>
                     <select id="operator_id" wire:model.live="operator_id"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('operator_id') border-red-500 @enderror">
-                        <option value="">Select Operator</option>
+                        <option value="">{{ __('Select Operator') }}</option>
                         @foreach($operators as $operator)
                         <option value="{{ $operator['id'] }}">{{ $operator['name'] }}</option>
                         @endforeach
@@ -48,11 +48,11 @@
                 <!-- Market -->
                 <div>
                     <label for="market_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Market *
+                        {{ __('Market') }} *
                     </label>
                     <select id="market_id" wire:model.live="market_id"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('market_id') border-red-500 @enderror">
-                        <option value="">Select Market</option>
+                        <option value="">{{ __('Select Market') }}</option>
                         @foreach($markets as $market)
                         <option value="{{ $market['id'] }}">{{ $market['name'] }}</option>
                         @endforeach
@@ -69,10 +69,9 @@
                     </label>
                     <select id="status" wire:model.live="status"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
-                        <option value="draft">Draft</option>
-                        <option value="active">Active</option>
-                        <option value="paused">Paused</option>
-                        <option value="completed">Completed</option>
+                        @foreach ($status_options as $option)
+                        <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                        @endforeach
                     </select>
                     @error('status')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>

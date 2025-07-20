@@ -2,16 +2,17 @@
 
 namespace App\Livewire\Admin\Campaigns;
 
+use App\Models\Market;
+use App\Models\Website;
 use Livewire\Component;
 use App\Models\Campaign;
 use App\Models\Operator;
-use App\Models\Market;
-use App\Models\Website;
-use App\Models\CampaignWebsite;
 use App\Models\CampaignTrigger;
-use Illuminate\Support\Facades\DB;
+use App\Models\CampaignWebsite;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use App\Enums\CampaignStatusEnum;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('layouts.app')]
 class CampaignManager extends Component
@@ -31,15 +32,16 @@ class CampaignManager extends Component
 
     // Campaign websites
     public $websites = [];
-    
+
     // Campaign triggers
     public $triggers = [];
-    
+
     // Available options for dropdowns
     public $operators = [];
     public $markets = [];
     public $availableWebsites = [];
-    
+    public $status_options = [];
+
     // UI state
     public $isEdit = false;
 
@@ -52,12 +54,12 @@ class CampaignManager extends Component
             'market_id' => 'required|exists:markets,id',
             'start_at' => 'required|date|after_or_equal:today',
             'end_at' => 'required|date|after:start_at',
-            'status' => ['required', Rule::in(['draft', 'active', 'paused', 'completed'])],
+            'status' => ['nullable', Rule::in($this->status_options)],
             'priority' => 'required|integer|min:1|max:10',
             'duration' => 'nullable|integer|min:1',
             'rotation_delay' => 'nullable|integer|min:0',
             'dom_selector' => 'nullable|string|max:255',
-            
+
             // Campaign websites validation
             'websites' => 'array|min:1',
             'websites.*.website_id' => 'required|exists:websites,id',
@@ -65,7 +67,7 @@ class CampaignManager extends Component
             'websites.*.dom_selector' => 'nullable|string|max:255',
             'websites.*.custom_affiliate_url' => 'nullable|url|max:500',
             'websites.*.timer_offset' => 'nullable|integer|min:0',
-            
+
             // Campaign triggers validation
             'triggers' => 'array|min:1',
             'triggers.*.type' => ['required', Rule::in(['time', 'scroll', 'click', 'exit_intent', 'page_load'])],
@@ -100,7 +102,7 @@ class CampaignManager extends Component
     public function mount($campaignId = null)
     {
         $this->loadDropdownData();
-        
+
         if ($campaignId) {
             $this->isEdit = true;
             $this->loadCampaign($campaignId);
@@ -114,13 +116,14 @@ class CampaignManager extends Component
         $this->operators = Operator::select('id', 'name')->get()->toArray();
         $this->markets = Market::select('id', 'name')->get()->toArray();
         $this->availableWebsites = Website::select('id', 'url', 'type')->get()->toArray();
+        $this->status_options = CampaignStatusEnum::getSelectOptions();
     }
 
     protected function loadCampaign($campaignId)
     {
         $this->campaign = Campaign::with(['campaignWebsites.website', 'campaignTriggers'])
             ->findOrFail($campaignId);
-        
+
         // Load campaign core fields
         $this->name = $this->campaign->name;
         $this->operator_id = $this->campaign->operator_id;
@@ -132,7 +135,7 @@ class CampaignManager extends Component
         $this->duration = $this->campaign->duration;
         $this->rotation_delay = $this->campaign->rotation_delay;
         $this->dom_selector = $this->campaign->dom_selector;
-        
+
         // Load websites
         $this->websites = $this->campaign->campaignWebsites->map(function ($website) {
             return [
@@ -144,7 +147,7 @@ class CampaignManager extends Component
                 'timer_offset' => $website->timer_offset,
             ];
         })->toArray();
-        
+
         // Load triggers
         $this->triggers = $this->campaign->campaignTriggers->map(function ($trigger) {
             return [
@@ -167,7 +170,7 @@ class CampaignManager extends Component
                 'timer_offset' => '',
             ]
         ];
-        
+
         $this->triggers = [
             [
                 'type' => '',
@@ -233,7 +236,7 @@ class CampaignManager extends Component
 
         $message = $this->isEdit ? 'Campaign updated successfully!' : 'Campaign created successfully!';
         session()->flash('success', $message);
-        
+
         return redirect()->route('campaigns.index');
     }
 
@@ -304,7 +307,7 @@ class CampaignManager extends Component
             ]);
         }
     }
-    
+
     public function render()
     {
         return view('livewire.admin.campaigns.campaign-manager');

@@ -12,8 +12,9 @@ class CampaignsIndex extends Component
     public $search = '';
     public function render()
     {
-        // You can load any necessary data here, for example:
-        $campaigns = Campaign::where('name', 'like', '%' . $this->search . '%')->paginate(10);
+        $campaigns = Campaign::where('name', 'like', '%' . $this->search . '%')
+            ->orderByDesc('updated_at')
+            ->paginate(15);
         return view('livewire.admin.campaigns.campaigns-index', compact('campaigns'));
     }
 }
