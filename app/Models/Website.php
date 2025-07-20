@@ -14,7 +14,6 @@ class Website extends Model
     use SoftDeletes, HasFactory;
     protected $casts = [
         'type' => WebsiteTypeEnum::class,
-        'deleted_at' => 'datetime',
     ];
 
     protected $table = 'websites';
@@ -27,7 +26,6 @@ class Website extends Model
         'auth_token',
         'auth_user',
         'auth_pass',
-        'deleted_by',
     ];
 
     /**

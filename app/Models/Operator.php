@@ -14,6 +14,5 @@ class Operator extends Model
         'name',
         'website_url',
         'logo_url',
-        'deleted_by',
     ];
 }

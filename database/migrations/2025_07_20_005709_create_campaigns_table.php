@@ -23,12 +23,13 @@ return new class extends Migration
                   ->index();
             $table->timestamp('start_at')->nullable()->index();
             $table->timestamp('end_at')->nullable()->index();
-            $table->enum('status', ['active', 'inactive', 'paused'])->default('inactive')->index();
+            $table->enum('status', ['active', 'inactive', 'paused', 'pending'])->default('inactive')->index();
             $table->unsignedInteger('priority')->default(0)->index();
             $table->unsignedInteger('duration')->default(0)->index();
             $table->unsignedInteger('rotation_delay')->default(0)->index();
             $table->string('dom_selector', 255)->index();
             $table->timestamps();
+            $table->softDeletes();
             $table->engine = 'InnoDB';
         });
     }

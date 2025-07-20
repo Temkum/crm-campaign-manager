@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Market extends Model
 {
     use SoftDeletes;
-    protected $fillable = ['name', 'iso_code', 'deleted_by'];
+    protected $fillable = ['name', 'iso_code'];
 
     /**
      * @return BelongsToMany<Website, $this>
