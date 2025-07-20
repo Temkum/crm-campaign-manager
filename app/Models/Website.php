@@ -35,4 +35,27 @@ class Website extends Model
     {
         return $this->belongsToMany(Market::class);
     }
+
+        /**
+     * @phpstan-return HasMany<CampaignWebsite>
+     */
+    public function campaignWebsites(): HasMany
+    {
+        return $this->hasMany(CampaignWebsite::class);
+    }
+    
+    /**
+     * Get campaigns through the pivot relationship
+     */
+    public function campaigns()
+    {
+        return $this->hasManyThrough(
+            Campaign::class,
+            CampaignWebsite::class,
+            'website_id',
+            'id',
+            'id',
+            'campaign_id'
+        );
+    }
 }

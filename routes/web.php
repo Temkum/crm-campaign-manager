@@ -20,7 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('campaigns')->name('campaigns.')->group(function () {
         Route::get('/', CampaignsIndex::class)->name('index');
         Route::get('/create', CampaignManager::class)->name('create');
-        Route::get('/{campaign}/edit', CampaignManager::class)->name('edit');
+        Route::get('/{campaign_id}/edit', CampaignManager::class)->name('edit');
     });
 });
 

@@ -1,4 +1,16 @@
 <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <!-- Debug Info (Remove in production) -->
+    @if(app()->environment('local'))
+    <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
+        <strong>Debug Info:</strong>
+        Mode: {{ $isEdit ? 'Edit' : 'Create' }} |
+        Campaign ID: {{ $campaignId ?? 'New' }} |
+        Websites: {{ count($websites) }} |
+        Triggers: {{ count($triggers) }}
+    </div>
+    @endif
+
+    <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">
             {{ $isEdit ? 'Edit Campaign' : 'Create New Campaign' }}
@@ -8,6 +20,24 @@
             triggers' }}
         </p>
     </div>
+
+    <!-- Global Error Messages -->
+    @if (session()->has('error'))
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700">{{ session('error') }}</p>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <form wire:submit="submit" class="space-y-8">
         <!-- Campaign Core Information -->
@@ -37,7 +67,9 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('operator_id') border-red-500 @enderror">
                         <option value="">{{ __('Select Operator') }}</option>
                         @foreach($operators as $operator)
-                        <option value="{{ $operator['id'] }}">{{ $operator['name'] }}</option>
+                        <option value="{{ $operator['id'] }}" {{ $operator_id==$operator['id'] ? 'selected' : '' }}>
+                            {{ $operator['name'] }}
+                        </option>
                         @endforeach
                     </select>
                     @error('operator_id')
@@ -54,7 +86,9 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('market_id') border-red-500 @enderror">
                         <option value="">{{ __('Select Market') }}</option>
                         @foreach($markets as $market)
-                        <option value="{{ $market['id'] }}">{{ $market['name'] }}</option>
+                        <option value="{{ $market['id'] }}" {{ $market_id==$market['id'] ? 'selected' : '' }}>
+                            {{ $market['name'] }}
+                        </option>
                         @endforeach
                     </select>
                     @error('market_id')
@@ -69,8 +103,10 @@
                     </label>
                     <select id="status" wire:model.live="status"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
-                        @foreach ($status_options as $option)
-                        <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                        @foreach ($status_options as $key => $option)
+                        <option value="{{ $key }}" {{ $status==$key ? 'selected' : '' }}>
+                            {{ ucfirst($option) }}
+                        </option>
                         @endforeach
                     </select>
                     @error('status')
@@ -83,7 +119,7 @@
                     <label for="start_at" class="block text-sm font-medium text-gray-700 mb-2">
                         Start Date *
                     </label>
-                    <input type="datetime-local" id="start_at" wire:model.live="start_at"
+                    <input type="datetime-local" id="start_at" wire:model.live="start_at" value="{{ $start_at }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('start_at') border-red-500 @enderror">
                     @error('start_at')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -95,7 +131,7 @@
                     <label for="end_at" class="block text-sm font-medium text-gray-700 mb-2">
                         End Date *
                     </label>
-                    <input type="datetime-local" id="end_at" wire:model.live="end_at"
+                    <input type="datetime-local" id="end_at" wire:model.live="end_at" value="{{ $end_at }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('end_at') border-red-500 @enderror">
                     @error('end_at')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -109,7 +145,8 @@
                     </label>
                     <select id="priority" wire:model.live="priority"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('priority') border-red-500 @enderror">
-                        @for($i = 1; $i <= 10; $i++) <option value="{{ $i }}">{{ $i }}</option>
+                        @for($i = 1; $i <= 10; $i++) <option value="{{ $i }}" {{ $priority==$i ? 'selected' : '' }}>{{
+                            $i }}</option>
                             @endfor
                     </select>
                     @error('priority')
@@ -122,7 +159,7 @@
                     <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
                         Duration (seconds)
                     </label>
-                    <input type="number" id="duration" wire:model.live="duration"
+                    <input type="number" id="duration" wire:model.live="duration" value="{{ $duration }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('duration') border-red-500 @enderror"
                         placeholder="Optional duration in seconds" min="1">
                     @error('duration')
@@ -136,6 +173,7 @@
                         Rotation Delay (seconds)
                     </label>
                     <input type="number" id="rotation_delay" wire:model.live="rotation_delay"
+                        value="{{ $rotation_delay }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('rotation_delay') border-red-500 @enderror"
                         placeholder="Optional rotation delay" min="0">
                     @error('rotation_delay')
@@ -148,7 +186,7 @@
                     <label for="dom_selector" class="block text-sm font-medium text-gray-700 mb-2">
                         DOM Selector
                     </label>
-                    <input type="text" id="dom_selector" wire:model.live="dom_selector"
+                    <input type="text" id="dom_selector" wire:model.live="dom_selector" value="{{ $dom_selector }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('dom_selector') border-red-500 @enderror"
                         placeholder="CSS selector (e.g., .banner, #popup)">
                     @error('dom_selector')

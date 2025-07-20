@@ -21,7 +21,7 @@
                     <td class="px-6 py-2">{{ $campaign->operator->name }}</td>
                     <td class="px-6 py-2">{{ $campaign->status }}</td>
                     <td class="px-6 py-2 text-right space-x-2">
-                        <a href="{{ route('campaigns.edit', $campaign) }}" class="btn btn-outline text-xs">Edit</a>
+                        <a href="{{ route('campaigns.edit', $campaign->id) }}" class="btn btn-outline text-xs">Edit</a>
                         <button wire:click="confirmDelete({{ $campaign->id }})"
                             class="btn btn-danger text-xs">Delete</button>
                     </td>
