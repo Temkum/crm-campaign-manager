@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Admin\Campaigns\CampaignManager;
 use App\Livewire\Admin\Campaigns\CampaignsIndex;
+use App\Livewire\Admin\Campaigns\CampaignManager;
+use App\Http\Controllers\Api\CampaignDeploymentController;
 
 Route::view('/', 'welcome');
 
@@ -22,6 +23,31 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', CampaignManager::class)->name('create');
         Route::get('/{campaign_id}/edit', CampaignManager::class)->name('edit');
     });
+
+    Route::prefix('campaigns/deployment')->group(function () {
+        Route::get('/', [CampaignDeploymentController::class, 'getDeployableCampaigns']);
+        Route::get('/website', [CampaignDeploymentController::class, 'getCampaignsForWebsite']);
+        Route::post('/deploy', [CampaignDeploymentController::class, 'deploySpecificCampaigns']);
+        Route::get('/stats', [CampaignDeploymentController::class, 'getDeploymentStats']);
+        Route::post('/validate', [CampaignDeploymentController::class, 'validateCampaigns']);
+    });
+
+    Route::middleware(['auth'])->prefix('admin')->group(function () {
+        Route::get('/campaigns/deployment', [CampaignDeploymentController::class, 'index'])
+            ->name('campaigns.deployment.index');
+        
+        Route::post('/campaigns/deployment/deploy', [CampaignDeploymentController::class, 'deploy'])
+            ->name('campaigns.deployment.deploy');
+        
+        Route::post('/campaigns/deployment/deploy-all', [CampaignDeploymentController::class, 'deployAll'])
+            ->name('campaigns.deployment.deploy-all');
+        
+        Route::get('/campaigns/deployment/stats', [CampaignDeploymentController::class, 'stats'])
+            ->name('campaigns.deployment.stats');
+        
+        Route::post('/campaigns/deployment/validate', [CampaignDeploymentController::class, 'validate'])
+            ->name('campaigns.deployment.validate');
+    });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

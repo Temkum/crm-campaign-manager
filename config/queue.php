@@ -72,6 +72,14 @@ return [
             'after_commit' => false,
         ],
 
+        'campaign-deployment' => [
+            'driver' => 'database', // or 'redis', 'sqs', etc.
+            'table' => 'jobs',
+            'queue' => 'campaign-deployment',
+            'retry_after' => 300,
+            'after_commit' => false,
+        ],
+
     ],
 
     /*
