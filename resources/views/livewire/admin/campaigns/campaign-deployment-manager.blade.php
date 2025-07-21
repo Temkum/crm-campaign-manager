@@ -1,3 +1,4 @@
+<div>
 <div class="max-w-7xl mx-auto p-6">
     <!-- Header -->
     <div class="mb-8">
@@ -247,4 +248,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>
