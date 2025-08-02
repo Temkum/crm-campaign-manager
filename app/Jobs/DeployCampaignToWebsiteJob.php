@@ -3,7 +3,9 @@
 namespace App\Jobs;
 
 use App\Services\CampaignDeploymentExecutorService;
+use App\Services\DeploymentValidator;
 use App\Models\Website;
+use App\Models\CampaignDeployment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -39,25 +41,80 @@ class DeployCampaignToWebsiteJob implements ShouldQueue
             return;
         }
 
+        // Create or update CampaignDeployment record
+        $deployment = CampaignDeployment::firstOrCreate([
+            'campaign_id' => $this->campaign['id'],
+        ], [
+            'status' => 'in_progress',
+            'deployed_at' => now(),
+            'metadata' => [],
+        ]);
+
+        $deployment->status = 'in_progress';
+        $deployment->deployed_at = now();
+        $deployment->save();
+
         Log::info("Deploying campaign {$this->campaign['id']} to website {$website->url}");
 
         try {
             $result = $deploymentExecutor->deployToWebsite($this->campaign, $website);
 
             if ($result['success']) {
-                Log::info("Successfully deployed to website", $result);
+                // Run async verification
+                $validator = app(DeploymentValidator::class);
+                $verification = $validator->validate($this->campaign, $website);
+
+                $deployment->status = $verification['success'] ? 'successful' : 'failed';
+                $deployment->metadata = array_merge($deployment->metadata ?? [], [
+                    'deployment_result' => $result,
+                    'verification' => $verification,
+                    'context' => [
+                        'campaign_id' => $this->campaign['id'],
+                        'website_id' => $this->websiteId,
+                        'website_url' => $website->url,
+                        'executed_at' => now()->toDateTimeString(),
+                    ],
+                ]);
+                $deployment->deployed_at = now();
+                $deployment->save();
+
+                Log::info("Successfully deployed and verified", [
+                    'deployment_id' => $deployment->id,
+                    'verification' => $verification,
+                ]);
             } else {
+                $deployment->status = 'failed';
+                $deployment->metadata = array_merge($deployment->metadata ?? [], [
+                    'deployment_result' => $result,
+                    'context' => [
+                        'campaign_id' => $this->campaign['id'],
+                        'website_id' => $this->websiteId,
+                        'website_url' => $website->url ?? null,
+                        'executed_at' => now()->toDateTimeString(),
+                    ],
+                ]);
+                $deployment->save();
                 Log::warning("Failed to deploy to website", $result);
                 throw new \Exception($result['error'] ?? 'Unknown deployment error');
             }
         } catch (\Exception $e) {
+            $deployment->status = 'failed';
+            $deployment->metadata = array_merge($deployment->metadata ?? [], [
+                'error' => $e->getMessage(),
+                'context' => [
+                    'campaign_id' => $this->campaign['id'],
+                    'website_id' => $this->websiteId,
+                    'website_url' => isset($website) ? $website->url : null,
+                    'executed_at' => now()->toDateTimeString(),
+                ],
+            ]);
+            $deployment->save();
             Log::error("Website deployment failed", [
                 'website_id' => $this->websiteId,
-                'website_url' => $website->url,
+                'website_url' => isset($website) ? $website->url : null,
                 'campaign_id' => $this->campaign['id'],
                 'error' => $e->getMessage(),
             ]);
-
             throw $e;
         }
     }

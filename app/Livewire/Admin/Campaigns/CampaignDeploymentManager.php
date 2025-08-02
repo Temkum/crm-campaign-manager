@@ -117,6 +117,37 @@ class CampaignDeploymentManager extends Component
         $this->lastDeploymentResult = $validation;
     }
 
+    public $deployments = [];
+
+    /**
+     * Redeploy a campaign deployment by ID.
+     */
+    public function redeploy($deploymentId)
+    {
+        $deployment = \App\Models\CampaignDeployment::find($deploymentId);
+        if ($deployment) {
+            // Trigger redeployment logic (reuse deploySelected or custom logic)
+            // For now, just dispatch the job again
+            \App\Jobs\DeployCampaignToWebsiteJob::dispatch($deployment->campaign_id, $deployment->campaign->campaignWebsites->first()->website_id ?? null);
+            session()->flash('success', 'Redeployment triggered.');
+        } else {
+            session()->flash('error', 'Deployment not found.');
+        }
+        $this->loadDeployments();
+    }
+
+    /**
+     * Load recent deployments for display.
+     */
+    public function loadDeployments()
+    {
+        $this->deployments = 
+            \App\Models\CampaignDeployment::with('campaign')
+                ->orderByDesc('deployed_at')
+                ->limit(20)
+                ->get();
+    }
+
     public function render()
     {
         $deployableCampaigns = $this->deploymentService->prepareCampaignsForDeployment();
@@ -124,10 +155,11 @@ class CampaignDeploymentManager extends Component
             ->whereIn('status', ['active', 'scheduled', 'disabled'])
             ->orderBy('priority', 'desc')
             ->get();
-
+        $this->loadDeployments();
         return view('livewire.admin.campaigns.campaign-deployment-manager', [
             'deployableCampaigns' => $deployableCampaigns,
             'allCampaigns' => $allCampaigns,
+            'deployments' => $this->deployments,
         ]);
     }
 }
