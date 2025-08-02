@@ -8,4 +8,5 @@ enum WebsiteTypeEnum: int
     case WORDPRESS = 1;
     case STATIC = 2;
     case LARAVEL = 3;
+    case OTHER = 4;
 }

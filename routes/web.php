@@ -34,8 +34,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware(['auth'])->prefix('admin')->group(function () {
-        // Route::get('/campaigns/deployment', [CampaignDeploymentController::class, 'index'])
-        //     ->name('campaigns.deployment.index');
+        // Websites routes
+        Route::get('/websites', \App\Livewire\Admin\Websites\WebsitesComponent::class)->name('websites.index');
+        Route::get('/websites/create', \App\Livewire\Admin\Websites\AddWebsite::class)->name('websites.create');
+        Route::get('/websites/{website}/edit', \App\Livewire\Admin\Websites\EditWebsite::class)->name('websites.edit');
 
         Route::post('/campaigns/deployment/deploy', [CampaignDeploymentController::class, 'deploy'])
             ->name('campaigns.deployment.deploy');
