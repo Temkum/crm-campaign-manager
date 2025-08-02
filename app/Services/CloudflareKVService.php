@@ -107,8 +107,8 @@ class CloudflareKVService
         try {
             // Default URLs to invalidate
             $defaultUrls = [
+                "https://{$domain}",
                 "https://{$domain}/__campaign",
-                "https://{$domain}/campaign",
             ];
 
             $urlsToInvalidate = array_merge($defaultUrls, $urls);
