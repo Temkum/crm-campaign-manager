@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'cloudflare' => [
+        'api_token' => env('CLOUDFLARE_API_TOKEN'),
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+        'kv_namespace_id' => env('CLOUDFLARE_KV_NAMESPACE_ID'),
+    ],
 ];

@@ -46,8 +46,43 @@ class CampaignSeeder extends Seeder
             ];
         }
 
+        // Get all website IDs
+        $websiteIds = DB::table('websites')->pluck('id');
+        if ($websiteIds->isEmpty()) {
+            $this->command->error("Websites table is empty. Please seed it first.");
+            return;
+        }
+
         foreach ($campaigns as $campaign) {
-            Campaign::firstOrCreate(['name' => $campaign['name']], $campaign);
+            $campaignModel = Campaign::firstOrCreate(['name' => $campaign['name']], $campaign);
+
+            // Attach at least 1 website (random)
+            $numWebsites = $faker->numberBetween(1, min(3, count($websiteIds)));
+            $chosenWebsiteIds = $websiteIds->random($numWebsites)->all();
+            foreach ($chosenWebsiteIds as $websiteId) {
+                \App\Models\CampaignWebsite::firstOrCreate([
+                    'campaign_id' => $campaignModel->id,
+                    'website_id' => $websiteId,
+                ], [
+                    'priority' => $faker->numberBetween(1, 10),
+                    'dom_selector' => $faker->randomElement(['body', 'head', 'title']),
+                    'custom_affiliate_url' => $faker->optional()->url,
+                    'timer_offset' => $faker->optional()->numberBetween(0, 300) ?? 0,
+                ]);
+            }
+
+            // Attach at least 1 trigger (random)
+            $triggerTypes = ['time', 'click', 'scroll', 'hover'];
+            $triggerOperators = ['=', '>', '<', '>=', '<='];
+            $numTriggers = $faker->numberBetween(1, 2);
+            for ($t = 0; $t < $numTriggers; $t++) {
+                \App\Models\CampaignTrigger::firstOrCreate([
+                    'campaign_id' => $campaignModel->id,
+                    'type' => $faker->randomElement($triggerTypes),
+                    'operator' => $faker->randomElement($triggerOperators),
+                    'value' => $faker->word,
+                ]);
+            }
         }
     }
 }

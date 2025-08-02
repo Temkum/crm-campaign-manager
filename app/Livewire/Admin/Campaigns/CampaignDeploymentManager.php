@@ -15,7 +15,7 @@ class CampaignDeploymentManager extends Component
     public $deploymentInProgress = false;
     public $lastDeploymentResult = null;
     public $deploymentStats = [];
-    
+    public $selectAll = false; // Added to support wire:model="selectAll"
     protected CampaignDeploymentService $deploymentService;
     protected CampaignDeploymentExecutorService $deploymentExecutor;
 
@@ -43,18 +43,17 @@ class CampaignDeploymentManager extends Component
     public function deployAllReady()
     {
         $this->deploymentInProgress = true;
-        
+
         try {
             $result = $this->deploymentExecutor->deployAutomatically();
-            
+
             $this->lastDeploymentResult = $result;
-            
+
             if ($result['success']) {
                 session()->flash('success', $result['message']);
             } else {
                 session()->flash('error', $result['message']);
             }
-            
         } catch (\Exception $e) {
             session()->flash('error', 'Deployment failed: ' . $e->getMessage());
         } finally {
@@ -74,19 +73,18 @@ class CampaignDeploymentManager extends Component
         }
 
         $this->deploymentInProgress = true;
-        
+
         try {
             $result = $this->deploymentExecutor->deployManually($this->selectedCampaigns);
-            
+
             $this->lastDeploymentResult = $result;
-            
+
             if ($result['success']) {
                 session()->flash('success', $result['message']);
                 $this->selectedCampaigns = []; // Clear selection
             } else {
                 session()->flash('error', $result['message']);
             }
-            
         } catch (\Exception $e) {
             session()->flash('error', 'Deployment failed: ' . $e->getMessage());
         } finally {
@@ -106,14 +104,14 @@ class CampaignDeploymentManager extends Component
         }
 
         $validation = $this->deploymentService->validateCampaignsForDeployment($this->selectedCampaigns);
-        
+
         if ($validation['invalid_count'] > 0) {
             $errorMessage = "Validation failed for {$validation['invalid_count']} campaigns. Check campaign configuration.";
             session()->flash('error', $errorMessage);
         } else {
             session()->flash('success', "All {$validation['valid_count']} selected campaigns passed validation!");
         }
-        
+
         $this->lastDeploymentResult = $validation;
     }
 
@@ -141,11 +139,11 @@ class CampaignDeploymentManager extends Component
      */
     public function loadDeployments()
     {
-        $this->deployments = 
+        $this->deployments =
             \App\Models\CampaignDeployment::with('campaign')
-                ->orderByDesc('deployed_at')
-                ->limit(20)
-                ->get();
+            ->orderByDesc('deployed_at')
+            ->limit(20)
+            ->get();
     }
 
     public function render()

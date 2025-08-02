@@ -19,7 +19,10 @@ class CampaignDeploymentService
         $query = Campaign::with(['campaignTriggers', 'campaignWebsites'])
             ->whereIn('status', ['active', 'scheduled']) // Only deployable campaigns
             ->where('start_at', '<=', now()) // Started campaigns
-            ->where('end_at', '>=', now()); // Not yet ended campaigns
+            ->where(function ($q) {
+                $q->whereNull('end_at')
+                    ->orWhere('end_at', '>=', now());
+            }); // Not yet ended campaigns or no end date
 
         // If specific campaign IDs are provided, filter by them
         if ($campaignIds) {
