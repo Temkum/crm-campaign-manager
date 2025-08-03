@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>CampaignCraft</title>
+  <title>CampaignCompanion</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
@@ -115,7 +115,7 @@
           <div class="w-10 h-10 rounded-lg flex items-center justify-center">
             <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-full h-full object-contain">
           </div>
-          <span class="text-xl font-bold">CampaignCraft</span>
+          <span class="text-xl font-bold">CampaignCompanion</span>
         </div>
         <div class="hidden md:flex space-x-8">
           <a href="#features" class="hover:text-purple-400 transition-colors duration-300">Features</a>
@@ -309,7 +309,8 @@
         <span class="gradient-text">Campaign Strategy?</span>
       </h2>
       <p class="text-xl text-gray-400 mb-8 leading-relaxed">
-        Join thousands of marketers who are already using CampaignCraft to deploy, manage, and optimize their campaigns
+        Join thousands of marketers who are already using CampaignCompanion to deploy, manage, and optimize their
+        campaigns
         with unprecedented efficiency.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -336,10 +337,10 @@
               </path>
             </svg>
           </div>
-          <span class="text-lg font-bold">CampaignCraft</span>
+          <span class="text-lg font-bold">CampaignCompanion</span>
         </div>
         <div class="text-gray-400">
-          © 2025 CampaignCraft. All rights reserved.
+          © 2025 CampaignCompanion. All rights reserved.
         </div>
       </div>
     </div>

@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 
 class Website extends Model
 {
     /** @use HasFactory<\Database\Factories\WebsiteFactory> */
     use SoftDeletes, HasFactory;
+    use Notifiable;
+
     protected $casts = [
         'type' => WebsiteTypeEnum::class,
     ];

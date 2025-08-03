@@ -8,11 +8,10 @@ use App\Enums\WebsiteTypeEnum;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Validate;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Validate;
 
 #[Layout('layouts.app')]
 class EditWebsite extends Component
@@ -21,20 +20,24 @@ class EditWebsite extends Component
 
     public Website $website;
 
-    #[Validate('required|url|max:255|string')]
     public string $url = '';
 
-    #[Validate('nullable|url|max:255|string')]
+    #[Validate('nullable|url|max:255')]
     public string $api_url = '';
 
-    #[Validate('required')]
+    #[Validate('required', new Enum(WebsiteTypeEnum::class))]
     public string $type = '';
 
     #[Validate('required|in:NONE,TOKEN,BASIC')]
     public string $auth_type = 'NONE';
 
+    #[Validate('nullable|string|max:255')]
     public ?string $auth_token = null;
+
+    #[Validate('required_if:auth_type,BASIC|nullable|string|max:255')]
     public ?string $auth_user = null;
+
+    #[Validate('nullable|string|max:255')]
     public ?string $auth_pass = null;
 
     // Track original encrypted values to determine if they should be updated
@@ -182,6 +185,7 @@ class EditWebsite extends Component
 
             $this->redirectRoute('websites.index', navigate: true);
         } catch (\Exception $e) {
+            $this->addError('url', $e->getMessage());
             Log::error('Failed to update website: ' . $e->getMessage(), [
                 'website_id' => $this->website->id,
             ]);
@@ -202,6 +206,7 @@ class EditWebsite extends Component
 
             $this->redirectRoute('websites.index', navigate: true);
         } catch (\Exception $e) {
+            $this->addError('url', $e->getMessage());
             Log::error('Failed to delete website: ' . $e->getMessage(), [
                 'website_id' => $this->website->id,
             ]);

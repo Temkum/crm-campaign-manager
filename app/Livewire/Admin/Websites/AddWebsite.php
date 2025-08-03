@@ -26,8 +26,8 @@ class AddWebsite extends Component
     protected function rules(): array
     {
         return [
-            'url'        => ['required', 'url'],
-            'api_url'    => ['required', 'url'],
+            'url'        => ['required|unique:websites,url', 'url'],
+            'api_url'    => ['required|unique:websites,api_url', 'url'],
             'type'       => ['required', new Enum(WebsiteTypeEnum::class)],
             'auth_type'  => ['required', 'in:NONE,TOKEN,BASIC'],
             'auth_token' => ['required_if:auth_type,TOKEN', 'nullable', 'string'],
@@ -39,8 +39,10 @@ class AddWebsite extends Component
     protected array $messages = [
         'url.required'          => 'The website URL is required.',
         'url.url'               => 'Please enter a valid URL.',
+        'url.unique'            => 'The website URL already exists.',
         'api_url.required'      => 'The API URL is required.',
         'api_url.url'           => 'Please enter a valid API URL.',
+        'api_url.unique'        => 'The API URL already exists.',
         'type.required'         => 'Please select a website type.',
         'auth_token.required_if' => 'An auth token is required when the Token auth type is selected.',
         'auth_user.required_if'  => 'Auth user is required for Basic auth.',

@@ -12,7 +12,7 @@ class Market extends Model
 
     protected $fillable = [
         'name',
-        'country_code',
+        'iso_code',
     ];
 
     /**

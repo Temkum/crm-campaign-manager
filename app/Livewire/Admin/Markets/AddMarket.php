@@ -4,23 +4,35 @@ namespace App\Livewire\Admin\Markets;
 
 use App\Models\Market;
 use Livewire\Component;
-use Livewire\Attributes\Validate;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
 class AddMarket extends Component
 {
-    #[Validate('required|string|max:255|unique:markets,name')]
     public $name = '';
-
-    #[Validate('required|string|size:2|unique:markets,iso_code')]
     public $iso_code = '';
+
+    public function rules()
+    {
+        return [
+            'name' => 'required|string|max:255|unique:markets,name',
+            'iso_code' => 'required|string|size:2|unique:markets,iso_code',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'name.unique' => 'A market with this name already exists.',
+            'iso_code.unique' => 'A market with this ISO code already exists.',
+        ];
+    }
 
     public function save()
     {
-        $this->validate();
+        $this->validate($this->rules(), $this->messages());
 
-        $market = Market::create([
+        Market::create([
             'name' => $this->name,
             'iso_code' => strtoupper($this->iso_code),
         ]);
