@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -69,6 +69,14 @@ return [
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'campaign-deployment' => [
+            'driver' => 'database', // or 'redis', 'sqs', etc.
+            'table' => 'jobs',
+            'queue' => 'campaign-deployment',
+            'retry_after' => 300,
             'after_commit' => false,
         ],
 

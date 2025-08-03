@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MarketSeeder::class,
             OperatorSeeder::class,
-            CampaignSeeder::class,
             WebsiteSeeder::class,
+            CampaignSeeder::class,
         ]);
     }
 }
