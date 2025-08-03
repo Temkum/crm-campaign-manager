@@ -112,7 +112,7 @@
               @if ($search)
                 {{ __('matching') }} "<span class="font-medium">{{ $search }}</span>"
               @endif
-              <button wire:click="resetFilters" class="ml-2 text-indigo-600 hover:text-indigo-500 font-medium">
+              <button wire:click="resetFilters" class="btn-sm ml-2 text-indigo-600 hover:text-indigo-500 font-medium">
                 {{ __('Clear all filters') }}
               </button>
             </div>

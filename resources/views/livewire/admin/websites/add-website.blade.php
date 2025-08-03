@@ -76,7 +76,7 @@
           class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm @error('type') border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500 @enderror">
           <option value="" disabled>{{ __('Select a website type') }}</option>
           @foreach ($websiteTypes as $typeOption)
-            <option value="{{ $typeOption->value }}">{{ $typeOption->name }}</option>
+            <option value="{{ $typeOption->value }}">{{ Str::title($typeOption->name) }}</option>
           @endforeach
         </select>
         <p id="type-help" class="mt-1 text-xs text-gray-500">

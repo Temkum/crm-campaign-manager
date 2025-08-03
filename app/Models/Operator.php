@@ -12,10 +12,8 @@ class Operator extends Model
 
     protected $fillable = [
         'name',
-        'email',
-        'phone',
-        'status',
-        'commission_rate',
+        'website_url',
+        'logo_url',
     ];
 
     /**

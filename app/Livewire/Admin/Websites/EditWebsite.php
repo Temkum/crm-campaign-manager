@@ -49,7 +49,7 @@ class EditWebsite extends Component
         $this->original_auth_token = $website->auth_token;
         $this->original_auth_pass = $website->auth_pass;
         $this->url = $website->url;
-        $this->api_url = $website->api_url;
+        $this->api_url = $website->api_url ?? '';
         $this->type = $website->type?->value ?? WebsiteTypeEnum::UNKNOWN->value;
         $this->auth_type = $website->auth_type;
         $this->auth_user = $website->auth_user;
@@ -73,7 +73,7 @@ class EditWebsite extends Component
             'auth_token' => [
                 'nullable',
                 'string',
-                'max:500',
+                'max:255',
                 function ($attribute, $value, $fail) {
                     if ($this->auth_type === 'TOKEN' && empty($value) && empty($this->original_auth_token)) {
                         $fail('An auth token is required when Token authentication is selected.');
@@ -109,7 +109,7 @@ class EditWebsite extends Component
         'type.required' => 'Please select a website type.',
         'auth_user.required_if' => 'Username is required for Basic authentication.',
         'auth_user.max' => 'Username must not exceed 255 characters.',
-        'auth_token.max' => 'Auth token must not exceed 500 characters.',
+        'auth_token.max' => 'Auth token must not exceed 255 characters.',
         'auth_pass.max' => 'Password must not exceed 255 characters.',
     ];
 
@@ -183,7 +183,7 @@ class EditWebsite extends Component
             $this->redirectRoute('websites.index', navigate: true);
         } catch (\Exception $e) {
             Log::error('Failed to update website: ' . $e->getMessage(), [
-                'website_id' => $this->website->id
+                'website_id' => $this->website->id,
             ]);
 
             session()->flash('error', __('Failed to update website. Please try again.'));

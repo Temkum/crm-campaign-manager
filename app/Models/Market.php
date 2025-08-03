@@ -13,16 +13,13 @@ class Market extends Model
     protected $fillable = [
         'name',
         'country_code',
-        'currency',
-        'timezone',
-        'status',
     ];
 
     /**
-     * @phpstan-return HasMany<Campaign>
+     * @return BelongsToMany<Website, $this>
      */
-    public function campaigns(): HasMany
+    public function websites(): BelongsToMany
     {
-        return $this->hasMany(Campaign::class);
+        return $this->belongsToMany(Website::class);
     }
 }

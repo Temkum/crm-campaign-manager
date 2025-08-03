@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Route;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 
 #[Layout('layouts.app')]
 class WebsitesComponent extends Component
