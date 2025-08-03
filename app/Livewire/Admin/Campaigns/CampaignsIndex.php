@@ -10,11 +10,14 @@ use App\Models\Campaign;
 class CampaignsIndex extends Component
 {
     public $search = '';
+
     public function render()
     {
         $campaigns = Campaign::where('name', 'like', '%' . $this->search . '%')
             ->orderByDesc('updated_at')
             ->paginate(15);
-        return view('livewire.admin.campaigns.campaigns-index', compact('campaigns'));
+        return view('livewire.admin.campaigns.campaigns-index', [
+            'campaigns' => $campaigns,
+        ]);
     }
 }

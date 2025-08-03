@@ -6,12 +6,16 @@ use App\Enums\WebsiteTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 
 class Website extends Model
 {
     /** @use HasFactory<\Database\Factories\WebsiteFactory> */
     use SoftDeletes, HasFactory;
+    use Notifiable;
+
     protected $casts = [
         'type' => WebsiteTypeEnum::class,
     ];
@@ -36,18 +40,18 @@ class Website extends Model
         return $this->belongsToMany(Market::class);
     }
 
-        /**
+    /**
      * @phpstan-return HasMany<CampaignWebsite>
      */
     public function campaignWebsites(): HasMany
     {
         return $this->hasMany(CampaignWebsite::class);
     }
-    
+
     /**
      * Get campaigns through the pivot relationship
      */
-    public function campaigns()
+    /* public function campaigns()
     {
         return $this->hasManyThrough(
             Campaign::class,
@@ -57,5 +61,12 @@ class Website extends Model
             'id',
             'campaign_id'
         );
+    } */
+
+    public function campaigns(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_websites')
+            ->withPivot(['priority', 'dom_selector', 'custom_affiliate_url', 'timer_offset'])
+            ->withTimestamps();
     }
 }

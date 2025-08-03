@@ -62,6 +62,16 @@ class Campaign extends Model
     }
 
     /**
+     * Get all deployments for this campaign.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function campaignDeployments(): HasMany
+    {
+        return $this->hasMany(CampaignDeployment::class);
+    }
+
+    /**
      * @phpstan-return HasMany<CampaignTrigger>
      */
     public function campaignTriggers(): HasMany
