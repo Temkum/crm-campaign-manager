@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('type')->index()->nullable();
             $table->string('value')->index()->nullable();
             $table->string('operator')->index()->nullable();
+            $table->text('description')->nullable()->index();
+            $table->integer('order_index')->default(0)->index();
             $table->softDeletes();
             $table->timestamps();
         });

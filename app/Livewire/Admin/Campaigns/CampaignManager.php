@@ -9,6 +9,7 @@ use App\Models\Campaign;
 use App\Models\Operator;
 use App\Models\CampaignTrigger;
 use App\Models\CampaignWebsite;
+use App\Models\CampaignTriggerGroup;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use App\Enums\CampaignStatusEnum;
@@ -34,14 +35,46 @@ class CampaignManager extends Component
     // Campaign websites
     public $websites = [];
 
-    // Campaign triggers
-    public $triggers = [];
+    // Campaign trigger groups and global logic
+    public $globalLogic = 'AND';
+
+    /** @var array<int, array{id: ?int, name: string, logic: string, order_index: int, triggers: array<int, array{id: ?int, type: string, operator: string, value: string, description: string, order_index: int}>}> */
+    public $groups = [];
 
     // Available options for dropdowns
     public $operators = [];
     public $markets = [];
     public $availableWebsites = [];
     public $status_options = [];
+
+    // Trigger dropdown options
+    public $triggerTypes = [
+        'url' => 'URL',
+        'referrer' => 'Referrer',
+        'device' => 'Device',
+        'country' => 'Country',
+        'pageViews' => 'Page Views',
+        'timeOnSite' => 'Time on Site',
+        'timeOnPage' => 'Time on Page',
+        'scroll' => 'Scroll Percentage',
+        'exitIntent' => 'Exit Intent',
+        'newVisitor' => 'New Visitor',
+        'dayOfWeek' => 'Day of Week',
+        'hour' => 'Hour',
+    ];
+
+    public $triggerOperators = [
+        'equals' => 'Equals',
+        'contains' => 'Contains',
+        'starts_with' => 'Starts with',
+        'ends_with' => 'Ends with',
+        'regex' => 'Regular expression',
+        'gte' => 'Greater than or equal',
+        'lte' => 'Less than or equal',
+        'between' => 'Between',
+        'in' => 'In (comma separated)',
+        'not_in' => 'Not in (comma separated)',
+    ];
 
     // UI state
     public $isEdit = false;
@@ -62,6 +95,9 @@ class CampaignManager extends Component
             'rotation_delay' => 'nullable|integer|min:0',
             'dom_selector' => 'nullable|string|max:255',
 
+            // Global logic validation
+            'globalLogic' => ['required', Rule::in(['AND', 'OR'])],
+
             // Campaign websites validation
             'websites' => 'array|min:1',
             'websites.*.website_id' => 'required|exists:websites,id',
@@ -70,11 +106,19 @@ class CampaignManager extends Component
             'websites.*.custom_affiliate_url' => 'nullable|url|max:500',
             'websites.*.timer_offset' => 'required|integer|min:1',
 
+            // Campaign trigger groups validation
+            'groups' => 'array|min:1',
+            'groups.*.name' => 'required|string|max:255',
+            'groups.*.logic' => ['required', Rule::in(['AND', 'OR'])],
+            'groups.*.order_index' => 'required|integer|min:0',
+            'groups.*.triggers' => 'array|min:1',
+
             // Campaign triggers validation
-            'triggers' => 'array|min:1',
-            'triggers.*.type' => ['required', Rule::in(['time', 'scroll', 'click', 'exit_intent', 'page_load'])],
-            'triggers.*.value' => 'required|string|max:255',
-            'triggers.*.operator' => ['required', Rule::in(['equals', 'greater_than', 'less_than', 'contains'])],
+            'groups.*.triggers.*.type' => ['required', Rule::in(array_keys($this->triggerTypes))],
+            'groups.*.triggers.*.operator' => ['required', Rule::in(array_keys($this->triggerOperators))],
+            'groups.*.triggers.*.value' => 'required|string|max:255',
+            'groups.*.triggers.*.description' => 'nullable|string|max:500',
+            'groups.*.triggers.*.order_index' => 'required|integer|min:0',
         ];
     }
 
@@ -88,6 +132,7 @@ class CampaignManager extends Component
             'start_at.after_or_equal' => 'Start date must be today or later.',
             'end_at.required' => 'End date is required.',
             'end_at.after' => 'End date must be after start date.',
+            'globalLogic.required' => 'Global logic is required.',
             'websites.min' => 'At least one website is required.',
             'websites.*.website_id.required' => 'Please select a website.',
             'websites.*.priority.required' => 'Website priority is required.',
@@ -97,10 +142,13 @@ class CampaignManager extends Component
             'websites.*.timer_offset.required' => 'Timer offset is required.',
             'websites.*.timer_offset.min' => 'Timer offset must be at least 1.',
             'websites.*.dom_selector.required' => 'DOM selector is required.',
-            'triggers.min' => 'At least one trigger is required.',
-            'triggers.*.type.required' => 'Trigger type is required.',
-            'triggers.*.value.required' => 'Trigger value is required.',
-            'triggers.*.operator.required' => 'Trigger operator is required.',
+            'groups.min' => 'At least one trigger group is required.',
+            'groups.*.name.required' => 'Group name is required.',
+            'groups.*.logic.required' => 'Group logic is required.',
+            'groups.*.triggers.min' => 'Each group must have at least one trigger.',
+            'groups.*.triggers.*.type.required' => 'Trigger type is required.',
+            'groups.*.triggers.*.operator.required' => 'Trigger operator is required.',
+            'groups.*.triggers.*.value.required' => 'Trigger value is required.',
         ];
     }
 
@@ -128,8 +176,10 @@ class CampaignManager extends Component
     protected function loadCampaign(int $campaign_id)
     {
         try {
-            $this->campaign = Campaign::with(['campaignWebsites.website', 'campaignTriggers'])
-                ->findOrFail($campaign_id);
+            $this->campaign = Campaign::with([
+                'campaignWebsites.website',
+                'campaignTriggerGroups.campaignTriggers'
+            ])->findOrFail($campaign_id);
 
             // Load campaign core fields
             $this->name = $this->campaign->name ?? '';
@@ -142,6 +192,7 @@ class CampaignManager extends Component
             $this->duration = $this->campaign->duration ? (string) $this->campaign->duration : '';
             $this->rotation_delay = $this->campaign->rotation_delay ? (string) $this->campaign->rotation_delay : '';
             $this->dom_selector = $this->campaign->dom_selector ?? '';
+            $this->globalLogic = $this->campaign->global_logic ?? 'AND';
 
             // Load websites
             if ($this->campaign->campaignWebsites->count() > 0) {
@@ -159,18 +210,28 @@ class CampaignManager extends Component
                 $this->initializeEmptyWebsites();
             }
 
-            // Load triggers
-            if ($this->campaign->campaignTriggers->count() > 0) {
-                $this->triggers = $this->campaign->campaignTriggers->map(function ($trigger) {
+            // Load trigger groups with triggers
+            if ($this->campaign->campaignTriggerGroups->count() > 0) {
+                $this->groups = $this->campaign->campaignTriggerGroups->sortBy('order_index')->map(function ($group) {
                     return [
-                        'id' => $trigger->id,
-                        'type' => $trigger->type,
-                        'value' => $trigger->value,
-                        'operator' => $trigger->operator,
+                        'id' => $group->id,
+                        'name' => $group->name,
+                        'logic' => $group->logic,
+                        'order_index' => $group->order_index,
+                        'triggers' => $group->campaignTriggers->sortBy('order_index')->map(function ($trigger) {
+                            return [
+                                'id' => $trigger->id,
+                                'type' => $trigger->type,
+                                'operator' => $trigger->operator,
+                                'value' => $trigger->value,
+                                'description' => $trigger->description ?? '',
+                                'order_index' => $trigger->order_index,
+                            ];
+                        })->values()->toArray(),
                     ];
-                })->toArray();
+                })->values()->toArray();
             } else {
-                $this->initializeEmptyTriggers();
+                $this->initializeEmptyGroups();
             }
         } catch (\Exception $e) {
             session()->flash('error', 'Campaign not found or could not be loaded.');
@@ -181,7 +242,7 @@ class CampaignManager extends Component
     protected function initializeEmptyForm()
     {
         $this->initializeEmptyWebsites();
-        $this->initializeEmptyTriggers();
+        $this->initializeEmptyGroups();
     }
 
     protected function initializeEmptyWebsites()
@@ -197,17 +258,29 @@ class CampaignManager extends Component
         ];
     }
 
-    protected function initializeEmptyTriggers()
+    protected function initializeEmptyGroups()
     {
-        $this->triggers = [
+        $this->groups = [
             [
-                'type' => '',
-                'value' => '',
-                'operator' => '',
+                'id' => null,
+                'name' => '',
+                'logic' => 'AND',
+                'order_index' => 0,
+                'triggers' => [
+                    [
+                        'id' => null,
+                        'type' => '',
+                        'operator' => '',
+                        'value' => '',
+                        'description' => '',
+                        'order_index' => 0,
+                    ]
+                ]
             ]
         ];
     }
 
+    // Website management methods
     public function addWebsite()
     {
         $this->websites[] = [
@@ -227,20 +300,129 @@ class CampaignManager extends Component
         }
     }
 
-    public function addTrigger()
+    // Trigger group management methods
+    public function addGroup()
     {
-        $this->triggers[] = [
-            'type' => '',
-            'value' => '',
-            'operator' => '',
+        $maxOrderIndex = 0;
+        foreach ($this->groups as $group) {
+            if ($group['order_index'] > $maxOrderIndex) {
+                $maxOrderIndex = $group['order_index'];
+            }
+        }
+
+        $this->groups[] = [
+            'id' => null,
+            'name' => '',
+            'logic' => 'AND',
+            'order_index' => $maxOrderIndex + 1,
+            'triggers' => [
+                [
+                    'id' => null,
+                    'type' => '',
+                    'operator' => '',
+                    'value' => '',
+                    'description' => '',
+                    'order_index' => 0,
+                ]
+            ]
         ];
     }
 
-    public function removeTrigger($index)
+    public function removeGroup($groupIndex)
     {
-        if (count($this->triggers) > 1) {
-            unset($this->triggers[$index]);
-            $this->triggers = array_values($this->triggers);
+        if (count($this->groups) > 1) {
+            unset($this->groups[$groupIndex]);
+            $this->groups = array_values($this->groups);
+
+            // Reorder remaining groups
+            foreach ($this->groups as $index => &$group) {
+                $group['order_index'] = $index;
+            }
+        }
+    }
+
+    public function moveGroupUp($groupIndex)
+    {
+        if ($groupIndex > 0) {
+            $temp = $this->groups[$groupIndex];
+            $this->groups[$groupIndex] = $this->groups[$groupIndex - 1];
+            $this->groups[$groupIndex - 1] = $temp;
+
+            // Update order indices
+            $this->groups[$groupIndex]['order_index'] = $groupIndex;
+            $this->groups[$groupIndex - 1]['order_index'] = $groupIndex - 1;
+        }
+    }
+
+    public function moveGroupDown($groupIndex)
+    {
+        if ($groupIndex < count($this->groups) - 1) {
+            $temp = $this->groups[$groupIndex];
+            $this->groups[$groupIndex] = $this->groups[$groupIndex + 1];
+            $this->groups[$groupIndex + 1] = $temp;
+
+            // Update order indices
+            $this->groups[$groupIndex]['order_index'] = $groupIndex;
+            $this->groups[$groupIndex + 1]['order_index'] = $groupIndex + 1;
+        }
+    }
+
+    // Trigger management methods
+    public function addTrigger($groupIndex)
+    {
+        $maxOrderIndex = 0;
+        foreach ($this->groups[$groupIndex]['triggers'] as $trigger) {
+            if ($trigger['order_index'] > $maxOrderIndex) {
+                $maxOrderIndex = $trigger['order_index'];
+            }
+        }
+
+        $this->groups[$groupIndex]['triggers'][] = [
+            'id' => null,
+            'type' => '',
+            'operator' => '',
+            'value' => '',
+            'description' => '',
+            'order_index' => $maxOrderIndex + 1,
+        ];
+    }
+
+    public function removeTrigger($groupIndex, $triggerIndex)
+    {
+        if (count($this->groups[$groupIndex]['triggers']) > 1) {
+            unset($this->groups[$groupIndex]['triggers'][$triggerIndex]);
+            $this->groups[$groupIndex]['triggers'] = array_values($this->groups[$groupIndex]['triggers']);
+
+            // Reorder remaining triggers
+            foreach ($this->groups[$groupIndex]['triggers'] as $index => &$trigger) {
+                $trigger['order_index'] = $index;
+            }
+        }
+    }
+
+    public function moveTriggerUp($groupIndex, $triggerIndex)
+    {
+        if ($triggerIndex > 0) {
+            $temp = $this->groups[$groupIndex]['triggers'][$triggerIndex];
+            $this->groups[$groupIndex]['triggers'][$triggerIndex] = $this->groups[$groupIndex]['triggers'][$triggerIndex - 1];
+            $this->groups[$groupIndex]['triggers'][$triggerIndex - 1] = $temp;
+
+            // Update order indices
+            $this->groups[$groupIndex]['triggers'][$triggerIndex]['order_index'] = $triggerIndex;
+            $this->groups[$groupIndex]['triggers'][$triggerIndex - 1]['order_index'] = $triggerIndex - 1;
+        }
+    }
+
+    public function moveTriggerDown($groupIndex, $triggerIndex)
+    {
+        if ($triggerIndex < count($this->groups[$groupIndex]['triggers']) - 1) {
+            $temp = $this->groups[$groupIndex]['triggers'][$triggerIndex];
+            $this->groups[$groupIndex]['triggers'][$triggerIndex] = $this->groups[$groupIndex]['triggers'][$triggerIndex + 1];
+            $this->groups[$groupIndex]['triggers'][$triggerIndex + 1] = $temp;
+
+            // Update order indices
+            $this->groups[$groupIndex]['triggers'][$triggerIndex]['order_index'] = $triggerIndex;
+            $this->groups[$groupIndex]['triggers'][$triggerIndex + 1]['order_index'] = $triggerIndex + 1;
         }
     }
 
@@ -260,8 +442,8 @@ class CampaignManager extends Component
         try {
             $this->validate();
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->dispatch('scrollToFirstError'); // Livewire 3 event
-            throw $e; // Re-throw to show errors
+            $this->dispatch('scrollToFirstError');
+            throw $e;
         }
 
         try {
@@ -280,8 +462,6 @@ class CampaignManager extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while saving the campaign. Please try again.');
             Log::error($e);
-
-            // Dispatch event to scroll to first error
             $this->dispatch('scrollToFirstError');
         }
     }
@@ -299,10 +479,11 @@ class CampaignManager extends Component
             'duration' => $this->duration ?: null,
             'rotation_delay' => $this->rotation_delay ?: null,
             'dom_selector' => $this->dom_selector ?: null,
+            'global_logic' => $this->globalLogic,
         ]);
 
         $this->saveCampaignWebsites($campaign);
-        $this->saveCampaignTriggers($campaign);
+        $this->saveCampaignTriggerGroups($campaign);
     }
 
     protected function updateCampaign()
@@ -318,14 +499,18 @@ class CampaignManager extends Component
             'duration' => $this->duration ?: null,
             'rotation_delay' => $this->rotation_delay ?: null,
             'dom_selector' => $this->dom_selector ?: null,
+            'global_logic' => $this->globalLogic,
         ]);
 
         // Delete existing relationships and recreate them
         $this->campaign->campaignWebsites()->delete();
-        $this->campaign->campaignTriggers()->delete();
+        $this->campaign->campaignTriggerGroups()->each(function ($group) {
+            $group->campaignTriggers()->delete();
+        });
+        $this->campaign->campaignTriggerGroups()->delete();
 
         $this->saveCampaignWebsites($this->campaign);
-        $this->saveCampaignTriggers($this->campaign);
+        $this->saveCampaignTriggerGroups($this->campaign);
     }
 
     protected function saveCampaignWebsites($campaign)
@@ -344,24 +529,31 @@ class CampaignManager extends Component
         }
     }
 
-    protected function saveCampaignTriggers($campaign)
+    protected function saveCampaignTriggerGroups($campaign)
     {
-        foreach ($this->triggers as $trigger) {
-            if (!empty($trigger['type']) && !empty($trigger['value']) && !empty($trigger['operator'])) {
-                CampaignTrigger::create([
+        foreach ($this->groups as $groupData) {
+            if (!empty($groupData['name'])) {
+                $group = CampaignTriggerGroup::create([
                     'campaign_id' => $campaign->id,
-                    'type' => $trigger['type'],
-                    'value' => $trigger['value'],
-                    'operator' => $trigger['operator'],
+                    'name' => $groupData['name'],
+                    'logic' => $groupData['logic'],
+                    'order_index' => $groupData['order_index'],
                 ]);
+
+                foreach ($groupData['triggers'] as $triggerData) {
+                    if (!empty($triggerData['type']) && !empty($triggerData['operator']) && !empty($triggerData['value'])) {
+                        CampaignTrigger::create([
+                            'campaign_trigger_group_id' => $group->id,
+                            'type' => $triggerData['type'],
+                            'operator' => $triggerData['operator'],
+                            'value' => $triggerData['value'],
+                            'description' => $triggerData['description'] ?: null,
+                            'order_index' => $triggerData['order_index'],
+                        ]);
+                    }
+                }
             }
         }
-    }
-
-    // Helper method to get current campaign for debugging
-    public function getCurrentCampaign()
-    {
-        return $this->campaign;
     }
 
     public function render()
