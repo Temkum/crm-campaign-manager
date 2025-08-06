@@ -7,12 +7,20 @@ node_modules
 pnpm-lock.yaml # (optional: if you're copying it manually)
 .vite
 
-# Laravel vendor (copied from builder)
-vendor
-
-# Laravel environment
+# Laravel specific
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
 .env
-.env.*
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
 
 # Laravel runtime/cache
 storage/*.key
@@ -23,12 +31,33 @@ bootstrap/cache
 # IDE
 .idea
 .vscode
+*.swp
+*.swo
+*~
 
-# OS files
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
+# Git
+.git
+.gitignore
+README.md
+
 # Docker
-Dockerfile
-.dockerignore
+Dockerfile*
 docker-compose*
+.dockerignore
+
+# Testing
+/tests
+/phpunit.xml
+/.phpunit.cache
+
+# Development
+/public/build/manifest.json
