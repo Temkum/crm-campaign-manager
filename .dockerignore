@@ -2,10 +2,6 @@
 .git
 .gitignore
 
-# Node / pnpm
-node_modules
-pnpm-lock.yaml
-
 # Laravel specific
 /node_modules
 /public/hot
