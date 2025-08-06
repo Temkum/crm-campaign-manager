@@ -31,13 +31,26 @@ RUN apk add --no-cache \
     autoconf \
     gcc \
     g++ \
-    make
+    make \
+    libpng-dev \
+    libxml2-dev \
+    openssl-dev \
+    php-dev
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql zip intl opcache bcmath pcntl
+# Install core PHP extensions
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    intl \
+    zip \
+    bcmath \
+    pcntl \
+    opcache
 
 # Install Redis via PECL
-RUN pecl install redis && docker-php-ext-enable redis
+RUN pecl update-channels && \
+    pecl install redis && \
+    docker-php-ext-enable redis
 
 WORKDIR /var/www/html
 
