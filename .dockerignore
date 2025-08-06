@@ -1,0 +1,34 @@
+# Version control
+.git
+.gitignore
+
+# Node / pnpm
+node_modules
+pnpm-lock.yaml # (optional: if you're copying it manually)
+.vite
+
+# Laravel vendor (copied from builder)
+vendor
+
+# Laravel environment
+.env
+.env.*
+
+# Laravel runtime/cache
+storage/*.key
+storage/logs
+storage/framework
+bootstrap/cache
+
+# IDE
+.idea
+.vscode
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*
