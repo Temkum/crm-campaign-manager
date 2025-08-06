@@ -81,10 +81,20 @@ COPY . .
 # Copy built assets from node stage with proper manifest
 COPY --from=node_builder /app/public/build ./public/build
 
-# Verify build assets exist
+# Verify build assets exist and show manifest content
 RUN ls -la public/build/ && \
-    test -f public/build/manifest.json && \
-    echo "Build assets verified successfully"
+    echo "Checking for manifest files..." && \
+    find public/build -name "*.json" -type f && \
+    if [ -f public/build/manifest.json ]; then \
+    echo "Manifest found:"; \
+    cat public/build/manifest.json; \
+    elif [ -f public/build/.vite/manifest.json ]; then \
+    echo "Vite manifest found in .vite directory, moving..."; \
+    mv public/build/.vite/manifest.json public/build/manifest.json; \
+    else \
+    echo "No manifest found, checking build structure..."; \
+    find public/build -type f; \
+    fi
 
 # Create Laravel directories and set permissions (as root)
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache && \
