@@ -10,9 +10,9 @@ services:
     environment:
       APP_ENV: production
       APP_KEY: base64:...
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_PORT: 3306
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: 5432
       DB_DATABASE: cookies_manager
       DB_USERNAME: root
       DB_PASSWORD: password123
@@ -21,22 +21,21 @@ services:
     networks:
       - laravel
 
-  mysql:
-    image: mysql:8
-    container_name: mysql
+  pgsql:
+    image: postgres:15
+    container_name: pgsql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: cookies_manager
-      MYSQL_USER: root
-      MYSQL_PASSWORD: password123
-      MYSQL_ROOT_PASSWORD: password123
+      POSTGRES_DB: cookies_manager
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password123
     volumes:
-      - mysql_data:/var/lib/mysql
+      - pgsql_data:/var/lib/postgresql/data
     networks:
       - laravel
 
 volumes:
-  mysql_data:
+  pgsql_data:
 
 networks:
   laravel:
