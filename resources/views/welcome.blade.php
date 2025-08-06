@@ -260,6 +260,7 @@
     </div>
   </footer>
 
+  @livewireScripts
   <script>
     // Add smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -307,7 +308,6 @@
       observer.observe(el);
     });
   </script>
-  @livewireScripts
 </body>
 
 </html>
