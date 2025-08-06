@@ -23,6 +23,8 @@ class CampaignTriggerGroup extends Model
     ];
 
     /**
+     * Get the campaign that owns this trigger group.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<Campaign, $this>
      */
     public function campaign(): BelongsTo
@@ -31,15 +33,18 @@ class CampaignTriggerGroup extends Model
     }
 
     /**
+     * Get the campaign triggers for this trigger group.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<CampaignTrigger, $this>
      */
-    public function triggers(): HasMany
+    public function campaignTriggers(): HasMany
     {
-        return $this->hasMany(CampaignTrigger::class, 'group_id')->orderBy('order_index');
+        return $this->hasMany(CampaignTrigger::class, 'campaign_trigger_group_id')->orderBy('order_index');
     }
 
     /**
      * Scope to order groups by their index
+     *
      * @param \Illuminate\Database\Eloquent\Builder<CampaignTriggerGroup> $query
      * @return \Illuminate\Database\Eloquent\Builder<CampaignTriggerGroup>
      */

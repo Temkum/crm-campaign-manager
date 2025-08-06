@@ -117,17 +117,22 @@
           </div>
           <span class="text-xl font-bold">CampaignCompanion</span>
         </div>
-        <div class="hidden md:flex space-x-8">
+        {{-- <div class="hidden md:flex space-x-8">
           <a href="#features" class="hover:text-purple-400 transition-colors duration-300">Features</a>
           <a href="#pricing" class="hover:text-purple-400 transition-colors duration-300">Pricing</a>
           <a href="#contact" class="hover:text-purple-400 transition-colors duration-300">Contact</a>
-        </div>
+        </div> --}}
         <div class="flex space-x-4">
-          <a href="/login" class="px-4 py-2 text-purple-400 hover:text-white transition-colors duration-300">Sign
-            In</a>
-          <button
-            class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
-            Started</button>
+          @auth
+            <a href="/dashboard"
+              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
+          @else
+            <a href="http://localhost:8000/login"
+              class="px-6 py-2 text-purple-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
+            <a href="/register"
+              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
+              Started</a>
+          @endauth
         </div>
       </div>
     </div>
@@ -235,7 +240,8 @@
             </svg>
           </div>
           <h3 class="text-2xl font-bold mb-4">Advanced Analytics</h3>
-          <p class="text-gray-400 leading-relaxed">Track performance with real-time analytics and AI-powered insights to
+          <p class="text-gray-400 leading-relaxed">Track performance with real-time analytics and AI-powered insights
+            to
             optimize your campaigns.</p>
         </div>
 

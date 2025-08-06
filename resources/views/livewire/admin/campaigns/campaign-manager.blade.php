@@ -1,12 +1,12 @@
-<div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+<div class="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
   <!-- Debug Info (Remove in production) -->
   @if (app()->environment('local'))
     <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
       <strong>Debug Info:</strong>
       Mode: {{ $isEdit ? 'Edit' : 'Create' }} |
-      Campaign ID: {{ $campaignId ?? 'New' }} |
+      Campaign ID: {{ $campaign_id ?? 'New' }} |
       Websites: {{ count($websites) }} |
-      Triggers: {{ count($triggers) }}
+      Groups: {{ count($groups) }}
     </div>
   @endif
 
@@ -17,9 +17,8 @@
     </h1>
     <p class="text-gray-600 mt-2">
       {{ $isEdit
-          ? 'Update campaign details, websites, and triggers'
-          : 'Set up a new campaign with websites and
-                  triggers' }}
+          ? 'Update campaign details, websites, and trigger groups'
+          : 'Set up a new campaign with websites and trigger groups' }}
     </p>
   </div>
 
@@ -148,7 +147,8 @@
           <select id="priority" wire:model.live="priority"
             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('priority') border-red-500 @enderror">
             @for ($i = 1; $i <= 10; $i++)
-              <option value="{{ $i }}" {{ $priority == $i ? 'selected' : '' }}>{{ $i }}</option>
+              <option value="{{ $i }}" {{ $priority == $i ? 'selected' : '' }}>{{ $i }}
+              </option>
             @endfor
           </select>
           @error('priority')
@@ -304,34 +304,114 @@
       </div>
     </div>
 
-    <!-- Campaign Triggers -->
+    <!-- Campaign Trigger Groups -->
     <div class="bg-gray-50 p-6 rounded-lg">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-900">Campaign Triggers *</h2>
-        <button type="button" wire:click="addTrigger"
-          class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
-            </path>
-          </svg>
-          Add Trigger
-        </button>
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">Campaign Trigger Groups *</h2>
+          <button type="button" wire:click="addGroup"
+            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+              </path>
+            </svg>
+            Add Group
+          </button>
+        </div>
+
+        <!-- Global Logic -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Logic Between Groups *
+          </label>
+          <div class="flex gap-4">
+            <label class="flex items-center">
+              <input type="radio" wire:model.live="globalLogic" value="AND"
+                class="mr-2 text-blue-600 focus:ring-blue-500 focus:ring-2">
+              <span class="text-sm text-gray-700">AND (All groups must match)</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" wire:model.live="globalLogic" value="OR"
+                class="mr-2 text-blue-600 focus:ring-blue-500 focus:ring-2">
+              <span class="text-sm text-gray-700">OR (Any group can match)</span>
+            </label>
+          </div>
+          @error('globalLogic')
+            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+          @enderror
+        </div>
       </div>
 
-      @error('triggers')
+      @error('groups')
         <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <p class="text-red-600 text-sm">{{ $message }}</p>
         </div>
       @enderror
 
       <div class="space-y-6">
-        @foreach ($triggers as $index => $trigger)
-          <div class="border border-gray-200 rounded-lg p-4 bg-white">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-medium text-gray-900">Trigger #{{ $index + 1 }}</h3>
-              @if (count($triggers) > 1)
-                <button type="button" wire:click="removeTrigger({{ $index }})"
-                  class="text-red-600 hover:text-red-800 transition-colors duration-200">
+        @foreach ($groups as $groupIndex => $group)
+          <div class="border border-gray-300 rounded-lg p-6 bg-white shadow-sm">
+            <!-- Group Header -->
+            <div class="flex justify-between items-start mb-6">
+              <div class="flex-1">
+                <div class="flex items-center gap-4 mb-4">
+                  <h3 class="text-lg font-semibold text-gray-900">
+                    Group #{{ $groupIndex + 1 }}
+                  </h3>
+
+                  <!-- Group Reorder Buttons -->
+                  <div class="flex gap-1">
+                    @if ($groupIndex > 0)
+                      <button type="button" wire:click="moveGroupUp({{ $groupIndex }})"
+                        class="p-1 text-gray-500 hover:text-gray-700 transition-colors" title="Move Up">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7">
+                          </path>
+                        </svg>
+                      </button>
+                    @endif
+                    @if ($groupIndex < count($groups) - 1)
+                      <button type="button" wire:click="moveGroupDown({{ $groupIndex }})"
+                        class="p-1 text-gray-500 hover:text-gray-700 transition-colors" title="Move Down">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                          </path>
+                        </svg>
+                      </button>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Group Name and Logic -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Group Name *</label>
+                    <input type="text" wire:model.live="groups.{{ $groupIndex }}.name"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.name') border-red-500 @enderror"
+                      placeholder="Enter group name">
+                    @error('groups.' . $groupIndex . '.name')
+                      <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Logic Within Group *</label>
+                    <select wire:model.live="groups.{{ $groupIndex }}.logic"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.logic') border-red-500 @enderror">
+                      <option value="AND">AND (All triggers must match)</option>
+                      <option value="OR">OR (Any trigger can match)</option>
+                    </select>
+                    @error('groups.' . $groupIndex . '.logic')
+                      <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                  </div>
+                </div>
+              </div>
+
+              <!-- Group Remove Button -->
+              @if (count($groups) > 1)
+                <button type="button" wire:click="removeGroup({{ $groupIndex }})"
+                  class="ml-4 text-red-600 hover:text-red-800 transition-colors duration-200" title="Remove Group">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -341,81 +421,188 @@
               @endif
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Trigger Type -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                <select wire:model.live="triggers.{{ $index }}.type"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('triggers.' . $index . '.type') border-red-500 @enderror">
-                  <option value="">Select Type</option>
-                  <option value="time">Time</option>
-                  <option value="scroll">Scroll</option>
-                  <option value="click">Click</option>
-                  <option value="exit_intent">Exit Intent</option>
-                  <option value="page_load">Page Load</option>
-                </select>
-                @error('triggers.' . $index . '.type')
-                  <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+            <!-- Triggers Section -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="text-md font-medium text-gray-800">Triggers</h4>
+                <button type="button" wire:click="addTrigger({{ $groupIndex }})"
+                  class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                  <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                    </path>
+                  </svg>
+                  Add Trigger
+                </button>
               </div>
 
-              <!-- Trigger Operator -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Operator *</label>
-                <select wire:model.live="triggers.{{ $index }}.operator"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('triggers.' . $index . '.operator') border-red-500 @enderror">
-                  <option value="">Select Operator</option>
-                  <option value="equals">Equals</option>
-                  <option value="greater_than">Greater Than</option>
-                  <option value="less_than">Less Than</option>
-                  <option value="contains">Contains</option>
-                </select>
-                @error('triggers.' . $index . '.operator')
-                  <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-              </div>
+              @error('groups.' . $groupIndex . '.triggers')
+                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p class="text-red-600 text-sm">{{ $message }}</p>
+                </div>
+              @enderror
 
-              <!-- Trigger Value -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Value *</label>
-                <input type="text" wire:model.live="triggers.{{ $index }}.value"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('triggers.' . $index . '.value') border-red-500 @enderror"
-                  placeholder="Trigger value">
-                @error('triggers.' . $index . '.value')
-                  <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+              <div class="space-y-4">
+                @foreach ($group['triggers'] as $triggerIndex => $trigger)
+                  <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                    <div class="flex justify-between items-start mb-4">
+                      <div class="flex items-center gap-2">
+                        <h5 class="text-sm font-medium text-gray-700">Trigger #{{ $triggerIndex + 1 }}</h5>
+
+                        <!-- Trigger Reorder Buttons -->
+                        <div class="flex gap-1">
+                          @if ($triggerIndex > 0)
+                            <button type="button"
+                              wire:click="moveTriggerUp({{ $groupIndex }}, {{ $triggerIndex }})"
+                              class="p-1 text-gray-400 hover:text-gray-600 transition-colors" title="Move Up">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5 15l7-7 7 7"></path>
+                              </svg>
+                            </button>
+                          @endif
+                          @if ($triggerIndex < count($group['triggers']) - 1)
+                            <button type="button"
+                              wire:click="moveTriggerDown({{ $groupIndex }}, {{ $triggerIndex }})"
+                              class="p-1 text-gray-400 hover:text-gray-600 transition-colors" title="Move Down">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 9l-7 7-7-7"></path>
+                              </svg>
+                            </button>
+                          @endif
+                        </div>
+                      </div>
+
+                      @if (count($group['triggers']) > 1)
+                        <button type="button" wire:click="removeTrigger({{ $groupIndex }}, {{ $triggerIndex }})"
+                          class="text-red-500 hover:text-red-700 transition-colors duration-200"
+                          title="Remove Trigger">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12">
+                            </path>
+                          </svg>
+                        </button>
+                      @endif
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <!-- Trigger Type -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                        <select wire:model.live="groups.{{ $groupIndex }}.triggers.{{ $triggerIndex }}.type"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.type') border-red-500 @enderror">
+                          <option value="">Select Type</option>
+                          @foreach ($triggerTypes as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                          @endforeach
+                        </select>
+                        @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.type')
+                          <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                      </div>
+
+                      <!-- Trigger Operator -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Operator *</label>
+                        <select wire:model.live="groups.{{ $groupIndex }}.triggers.{{ $triggerIndex }}.operator"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.operator') border-red-500 @enderror">
+                          <option value="">Select Operator</option>
+                          @foreach ($triggerOperators as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                          @endforeach
+                        </select>
+                        @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.operator')
+                          <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                      </div>
+
+                      <!-- Trigger Value -->
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Value *</label>
+                        <input type="text"
+                          wire:model.live="groups.{{ $groupIndex }}.triggers.{{ $triggerIndex }}.value"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.value') border-red-500 @enderror"
+                          placeholder="Trigger value">
+                        @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.value')
+                          <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                      </div>
+
+                      <!-- Trigger Description -->
+                      <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <input type="text"
+                          wire:model.live="groups.{{ $groupIndex }}.triggers.{{ $triggerIndex }}.description"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.description') border-red-500 @enderror"
+                          placeholder="Optional description for this trigger">
+                        @error('groups.' . $groupIndex . '.triggers.' . $triggerIndex . '.description')
+                          <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                      </div>
+                    </div>
+
+                    <!-- Trigger Help Text -->
+                    @if (isset($trigger['type']) && $trigger['type'])
+                      <div class="mt-3 p-3 bg-blue-50 rounded-md">
+                        <p class="text-sm text-blue-700">
+                          @switch($trigger['type'])
+                            @case('url')
+                              <strong>URL Trigger:</strong> Matches against the current page URL
+                            @break
+
+                            @case('referrer')
+                              <strong>Referrer Trigger:</strong> Matches against the referring page URL
+                            @break
+
+                            @case('device')
+                              <strong>Device Trigger:</strong> Matches device type (mobile, tablet, desktop)
+                            @break
+
+                            @case('country')
+                              <strong>Country Trigger:</strong> Matches visitor's country code (e.g., US, UK)
+                            @break
+
+                            @case('pageViews')
+                              <strong>Page Views Trigger:</strong> Number of pages viewed in session
+                            @break
+
+                            @case('timeOnSite')
+                              <strong>Time on Site:</strong> Total time spent on site in seconds
+                            @break
+
+                            @case('timeOnPage')
+                              <strong>Time on Page:</strong> Time spent on current page in seconds
+                            @break
+
+                            @case('scroll')
+                              <strong>Scroll Trigger:</strong> Percentage of page scrolled (0-100)
+                            @break
+
+                            @case('exitIntent')
+                              <strong>Exit Intent:</strong> Triggered when user moves cursor toward browser controls
+                            @break
+
+                            @case('newVisitor')
+                              <strong>New Visitor:</strong> Use "true" or "false" to match new vs returning visitors
+                            @break
+
+                            @case('dayOfWeek')
+                              <strong>Day of Week:</strong> Day name (Monday, Tuesday, etc.) or number (1-7)
+                            @break
+
+                            @case('hour')
+                              <strong>Hour Trigger:</strong> Hour of day in 24-hour format (0-23)
+                            @break
+                          @endswitch
+                        </p>
+                      </div>
+                    @endif
+                  </div>
+                @endforeach
               </div>
             </div>
-
-            <!-- Trigger Help Text -->
-            @if (isset($triggers[$index]['type']) && $triggers[$index]['type'])
-              <div class="mt-3 p-3 bg-blue-50 rounded-md">
-                <p class="text-sm text-blue-700">
-                  @switch($triggers[$index]['type'])
-                    @case('time')
-                      <strong>Time Trigger:</strong> Value should be in seconds (e.g., 30 for 30 seconds after
-                      page load)
-                    @break
-
-                    @case('scroll')
-                      <strong>Scroll Trigger:</strong> Value should be percentage (e.g., 50 for 50% page scroll)
-                    @break
-
-                    @case('click')
-                      <strong>Click Trigger:</strong> Value should be CSS selector (e.g., .button, #submit)
-                    @break
-
-                    @case('exit_intent')
-                      <strong>Exit Intent:</strong> Triggers when user moves cursor toward browser close button
-                    @break
-
-                    @case('page_load')
-                      <strong>Page Load:</strong> Triggers immediately when page loads
-                    @break
-                  @endswitch
-                </p>
-              </div>
-            @endif
           </div>
         @endforeach
       </div>
@@ -439,7 +626,7 @@
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
           </path>
         </svg>
-        <span wire:loading.remove>{{ $isEdit ? 'Update Campaign' : 'Create Campaign' }}</span>
+        <span wire:loading.remove">{{ $isEdit ? 'Update Campaign' : 'Create Campaign' }}</span>
         <span wire:loading>{{ $isEdit ? 'Updating...' : 'Creating...' }}</span>
       </button>
     </div>

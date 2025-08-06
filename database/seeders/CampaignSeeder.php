@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Campaign;
+use App\Models\CampaignTrigger;
+use App\Models\CampaignTriggerGroup;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Faker\Factory;
@@ -71,16 +73,54 @@ class CampaignSeeder extends Seeder
                 ]);
             }
 
-            // Attach at least 1 trigger (random)
-            $triggerTypes = ['time', 'click', 'scroll', 'hover'];
-            $triggerOperators = ['=', '>', '<', '>=', '<='];
+            // Create a trigger group for the campaign
+            $triggerGroup = CampaignTriggerGroup::firstOrCreate([
+                'campaign_id' => $campaignModel->id,
+                'name' => 'Group ' . $faker->word,
+            ], [
+                'logic' => 'AND',
+                'order_index' => 0,
+            ]);
+
+            // Attach 1–2 triggers to the group
+            $triggerTypes = [
+                'url',
+                'referrer',
+                'device',
+                'country',
+                'pageViews',
+                'timeOnSite',
+                'timeOnPage',
+                'scroll',
+                'exitIntent',
+                'newVisitor',
+                'dayOfWeek',
+                'hour'
+            ];
+
+            $triggerOperators = [
+                'equals',
+                'contains',
+                'starts_with',
+                'ends_with',
+                'regex',
+                'gte',
+                'lte',
+                'between',
+                'in',
+                'not_in'
+            ];
+
             $numTriggers = $faker->numberBetween(1, 2);
+
             for ($t = 0; $t < $numTriggers; $t++) {
-                \App\Models\CampaignTrigger::firstOrCreate([
-                    'campaign_id' => $campaignModel->id,
+                CampaignTrigger::create([
+                    'campaign_trigger_group_id' => $triggerGroup->id,
                     'type' => $faker->randomElement($triggerTypes),
                     'operator' => $faker->randomElement($triggerOperators),
                     'value' => $faker->word,
+                    'description' => $faker->sentence,
+                    'order_index' => $t,
                 ]);
             }
         }
