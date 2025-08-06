@@ -53,6 +53,7 @@ README.md
 Dockerfile*
 docker-compose*
 .dockerignore
+!docker/
 
 # Testing
 /tests
