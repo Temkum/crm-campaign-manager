@@ -28,10 +28,16 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     mysql-client \
-    php81-pecl-redis \
-    php81-pcntl
+    autoconf \
+    gcc \
+    g++ \
+    make
 
+# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql zip intl opcache bcmath pcntl
+
+# Install Redis via PECL
+RUN pecl install redis && docker-php-ext-enable redis
 
 WORKDIR /var/www/html
 
