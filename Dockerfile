@@ -83,14 +83,16 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 # Copy application source
 COPY . .
 
-# Set proper permissions
+# Set proper permissions BEFORE creating config files
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache && \
     chown -R laravel:laravel /var/www/html && \
     chmod -R 755 /var/www/html && \
     chmod -R 775 storage bootstrap/cache
 
-# Create log directories
-RUN mkdir -p /var/log/supervisor /var/log/nginx
+# Create log directories with proper permissions
+RUN mkdir -p /var/log/supervisor /var/log/nginx && \
+    chown -R laravel:laravel /var/log/supervisor && \
+    chmod 755 /var/log/supervisor
 
 # Create configuration files using echo commands to avoid heredoc issues
 RUN echo '[supervisord]' > /etc/supervisord.conf && \
@@ -126,7 +128,8 @@ RUN echo '[supervisord]' > /etc/supervisord.conf && \
     echo 'autorestart=true' >> /etc/supervisord.conf && \
     echo 'stdout_logfile=/var/log/supervisor/php-fpm.log' >> /etc/supervisord.conf && \
     echo 'stderr_logfile=/var/log/supervisor/php-fpm.log' >> /etc/supervisord.conf && \
-    echo 'priority=20' >> /etc/supervisord.conf
+    echo 'priority=20' >> /etc/supervisord.conf && \
+    chmod 644 /etc/supervisord.conf
 
 # Create basic nginx configuration
 RUN echo 'user laravel;' > /etc/nginx/nginx.conf && \
@@ -199,9 +202,31 @@ RUN echo '[www]' > /usr/local/etc/php-fpm.d/www.conf && \
 RUN echo '#!/bin/bash' > /usr/local/bin/entrypoint.sh && \
     echo 'set -e' >> /usr/local/bin/entrypoint.sh && \
     echo 'echo "Starting Laravel application..."' >> /usr/local/bin/entrypoint.sh && \
-    echo 'if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo '# Ensure proper permissions' >> /usr/local/bin/entrypoint.sh && \
+    echo 'chown -R laravel:laravel /var/www/html/storage /var/www/html/bootstrap/cache' >> /usr/local/bin/entrypoint.sh && \
+    echo 'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo '# Handle .env file' >> /usr/local/bin/entrypoint.sh && \
+    echo 'if [ ! -f .env ]; then' >> /usr/local/bin/entrypoint.sh && \
+    echo '    if [ -f .env.example ]; then' >> /usr/local/bin/entrypoint.sh && \
+    echo '        cp .env.example .env' >> /usr/local/bin/entrypoint.sh && \
+    echo '        echo ".env file created from .env.example"' >> /usr/local/bin/entrypoint.sh && \
+    echo '    else' >> /usr/local/bin/entrypoint.sh && \
+    echo '        echo "APP_KEY=" > .env' >> /usr/local/bin/entrypoint.sh && \
+    echo '        echo "APP_ENV=production" >> .env' >> /usr/local/bin/entrypoint.sh && \
+    echo '        echo "APP_DEBUG=false" >> .env' >> /usr/local/bin/entrypoint.sh && \
+    echo '        echo "Minimal .env file created"' >> /usr/local/bin/entrypoint.sh && \
+    echo '    fi' >> /usr/local/bin/entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo '# Generate application key' >> /usr/local/bin/entrypoint.sh && \
     echo 'php artisan key:generate --no-interaction --force 2>/dev/null || true' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo '# Create storage link' >> /usr/local/bin/entrypoint.sh && \
     echo 'php artisan storage:link --no-interaction 2>/dev/null || true' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo 'echo "Laravel application setup completed!"' >> /usr/local/bin/entrypoint.sh && \
     echo 'exec "$@"' >> /usr/local/bin/entrypoint.sh && \
     chmod +x /usr/local/bin/entrypoint.sh
 

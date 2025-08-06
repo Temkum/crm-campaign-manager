@@ -48,3 +48,20 @@ EXPOSE 9000
 CMD ["php-fpm"]
 
 ```
+
+## Hosting Options Comparison for Laravel/PHP
+
+| Feature / Use Case         | **Render**                       | **Railway**                      | **Hetzner**                           |
+| -------------------------- | -------------------------------- | -------------------------------- | ------------------------------------- |
+| **Ease of setup**          | ⭐️⭐️⭐️⭐️⭐️ (Very simple)    | ⭐️⭐️⭐️⭐️⭐️ (Very simple)    | ⭐️⭐️ (Needs manual setup)           |
+| **Best for**               | Full-stack apps, hobby → prod    | Quick deployments, side projects | Custom VPS, performance, self-hosting |
+| **Supports Laravel**       | ✅ (Docker or native buildpacks) | ✅ (Docker or Nixpacks)          | ✅ (Manual LAMP/LEMP or Docker)       |
+| **Free tier**              | ✅ (Web services with limits)    | ✅ (Limited hours/month)         | ❌ (No free tier, low-cost VPS)       |
+| **Pricing (starter)**      | Free → \$7/month                 | Free → \$5/month                 | €4.15/month VPS (CX11)                |
+| **Deployment method**      | Git + Docker or Buildpacks       | Git + Docker/Nixpacks            | Manual (SSH, Git, Docker, CI/CD)      |
+| **Database support**       | Built-in PostgreSQL, Redis, etc. | Built-in PostgreSQL, MySQL       | Self-managed or install manually      |
+| **Custom domains + HTTPS** | ✅ Free HTTPS                    | ✅ Free HTTPS                    | ✅ Manual setup with Let's Encrypt    |
+| **Performance**            | ⭐️⭐️⭐️⭐️ (good for mid apps) | ⭐️⭐️⭐️ (good for light apps)  | ⭐️⭐️⭐️⭐️⭐️ (full control, fast)  |
+| **Scalability**            | ✅ Horizontal (paid tiers)       | ✅ Limited in free plan          | ✅ Manual scaling                     |
+| **Persistent storage**     | ✅ (via disks on paid plans)     | ✅ (project volumes)             | ✅ Full disk control                  |
+| **Queue/Worker support**   | ✅ via Background Workers        | ✅ via Services                  | ✅ (You set it up)                    |
