@@ -43,8 +43,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libxml2-dev \
     openssl-dev \
-    php-dev \
-    shadow
+    $PHPIZE_DEPS
 
 # Install core PHP extensions
 RUN docker-php-ext-install \
@@ -63,8 +62,8 @@ RUN pecl update-channels && \
     docker-php-ext-enable redis
 
 # Create application user
-RUN groupadd -g 1000 laravel && \
-    useradd -u 1000 -g laravel -m laravel
+RUN addgroup -g 1000 laravel && \
+    adduser -u 1000 -G laravel -D laravel
 
 # Set working directory
 WORKDIR /var/www/html
