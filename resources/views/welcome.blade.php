@@ -104,6 +104,7 @@
 
   <!-- Styles -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @livewireStyles
 </head>
 
 <body class="bg-gray-900 text-white overflow-x-hidden">
@@ -399,6 +400,7 @@
       observer.observe(el);
     });
   </script>
+  @livewireScripts
 </body>
 
 </html>

@@ -4,8 +4,7 @@
 
 # Node / pnpm
 node_modules
-pnpm-lock.yaml # (optional: if you're copying it manually)
-.vite
+pnpm-lock.yaml
 
 # Laravel specific
 /node_modules

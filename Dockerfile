@@ -64,9 +64,6 @@ RUN pecl update-channels && \
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy built assets from node stage
-COPY --from=node_builder /app/public/build ./public/build
-
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -78,6 +75,12 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 # Copy application source
 COPY . .
+
+# Ensure the public directory exists and copy built assets properly
+RUN mkdir -p public/build
+
+# Copy built assets from node stage (ensure the entire public directory structure)
+COPY --from=node_builder /app/public/build ./public/build
 
 # Create Laravel directories and set permissions (as root)
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache && \
@@ -121,6 +124,17 @@ RUN printf 'user www-data;\n' > /etc/nginx/nginx.conf && \
     printf '            return 200 "healthy\\n";\n' >> /etc/nginx/nginx.conf && \
     printf '            add_header Content-Type text/plain;\n' >> /etc/nginx/nginx.conf && \
     printf '        }\n\n' >> /etc/nginx/nginx.conf && \
+    printf '        # Serve static assets with proper headers\n' >> /etc/nginx/nginx.conf && \
+    printf '        location ~* \\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {\n' >> /etc/nginx/nginx.conf && \
+    printf '            expires 1y;\n' >> /etc/nginx/nginx.conf && \
+    printf '            add_header Cache-Control "public, no-transform";\n' >> /etc/nginx/nginx.conf && \
+    printf '            try_files $uri =404;\n' >> /etc/nginx/nginx.conf && \
+    printf '        }\n\n' >> /etc/nginx/nginx.conf && \
+    printf '        location /build/ {\n' >> /etc/nginx/nginx.conf && \
+    printf '            expires 1y;\n' >> /etc/nginx/nginx.conf && \
+    printf '            add_header Cache-Control "public, no-transform";\n' >> /etc/nginx/nginx.conf && \
+    printf '            try_files $uri =404;\n' >> /etc/nginx/nginx.conf && \
+    printf '        }\n\n' >> /etc/nginx/nginx.conf && \
     printf '        location / {\n' >> /etc/nginx/nginx.conf && \
     printf '            try_files $uri $uri/ /index.php?$query_string;\n' >> /etc/nginx/nginx.conf && \
     printf '        }\n\n' >> /etc/nginx/nginx.conf && \
@@ -159,7 +173,7 @@ RUN echo '[supervisord]' > /etc/supervisord.conf && \
     echo 'stderr_logfile=/dev/stderr' >> /etc/supervisord.conf && \
     echo 'stderr_logfile_maxbytes=0' >> /etc/supervisord.conf
 
-# Create entrypoint script with better error handling
+# Create entrypoint script with better error handling and asset debugging
 RUN echo '#!/bin/bash' > /usr/local/bin/entrypoint.sh && \
     echo 'set -e' >> /usr/local/bin/entrypoint.sh && \
     echo '' >> /usr/local/bin/entrypoint.sh && \
@@ -169,6 +183,14 @@ RUN echo '#!/bin/bash' > /usr/local/bin/entrypoint.sh && \
     echo 'mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache' >> /usr/local/bin/entrypoint.sh && \
     echo 'chmod -R 775 storage bootstrap/cache' >> /usr/local/bin/entrypoint.sh && \
     echo 'chown -R www-data:www-data storage bootstrap/cache' >> /usr/local/bin/entrypoint.sh && \
+    echo '' >> /usr/local/bin/entrypoint.sh && \
+    echo '# Debug assets' >> /usr/local/bin/entrypoint.sh && \
+    echo 'echo "=== ASSET DEBUGGING ==="' >> /usr/local/bin/entrypoint.sh && \
+    echo 'echo "Public directory contents:"' >> /usr/local/bin/entrypoint.sh && \
+    echo 'ls -la public/' >> /usr/local/bin/entrypoint.sh && \
+    echo 'echo "Build directory contents:"' >> /usr/local/bin/entrypoint.sh && \
+    echo 'ls -la public/build/ 2>/dev/null || echo "Build directory not found"' >> /usr/local/bin/entrypoint.sh && \
+    echo 'echo "=========================="' >> /usr/local/bin/entrypoint.sh && \
     echo '' >> /usr/local/bin/entrypoint.sh && \
     echo '# Handle environment file' >> /usr/local/bin/entrypoint.sh && \
     echo 'if [ ! -f .env ]; then' >> /usr/local/bin/entrypoint.sh && \
