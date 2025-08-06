@@ -9,7 +9,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
 
 COPY resources ./resources
-COPY vite.config.ts ./
+COPY vite.config.js ./
 RUN pnpm build
 
 # Stage 2: PHP with Laravel
