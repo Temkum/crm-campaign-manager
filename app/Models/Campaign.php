@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Campaign extends Model
@@ -93,9 +94,9 @@ class Campaign extends Model
     /**
      * Get all triggers through trigger groups.
      *
-     * @phpstan-return HasMany<CampaignTrigger>
+     * @phpstan-return HasManyThrough<CampaignTrigger>
      */
-    public function campaignTriggers(): HasMany
+    public function campaignTriggers(): HasManyThrough
     {
         return $this->hasManyThrough(
             CampaignTrigger::class,

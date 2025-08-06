@@ -39,7 +39,7 @@ class CampaignTriggerGroup extends Model
      */
     public function campaignTriggers(): HasMany
     {
-        return $this->hasMany(CampaignTrigger::class, 'group_id')->orderBy('order_index');
+        return $this->hasMany(CampaignTrigger::class, 'campaign_trigger_group_id')->orderBy('order_index');
     }
 
     /**

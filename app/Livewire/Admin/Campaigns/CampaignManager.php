@@ -154,14 +154,31 @@ class CampaignManager extends Component
 
     public function mount($campaign_id = null)
     {
-        $this->campaign_id = $campaign_id;
-        $this->loadDropdownData();
+        try {
+            $this->campaign_id = $campaign_id;
+            $this->loadDropdownData();
 
-        if ($campaign_id) {
-            $this->isEdit = true;
-            $this->loadCampaign($campaign_id);
-        } else {
-            $this->initializeEmptyForm();
+            if ($campaign_id) {
+                Log::info('Loading campaign for edit', ['campaign_id' => $campaign_id]);
+                $this->isEdit = true;
+                $this->loadCampaign($campaign_id);
+                Log::info('Campaign loaded successfully', [
+                    'groups_count' => count($this->groups),
+                    'websites_count' => count($this->websites)
+                ]);
+            } else {
+                $this->initializeEmptyForm();
+            }
+        } catch (\Exception $e) {
+            Log::error('Mount error: ' . $e->getMessage(), [
+                'campaign_id' => $campaign_id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            session()->flash('error', 'Failed to load campaign data.');
+            if ($campaign_id) {
+                return redirect()->route('campaigns.index');
+            }
         }
     }
 
@@ -181,12 +198,19 @@ class CampaignManager extends Component
                 'campaignTriggerGroups.campaignTriggers'
             ])->findOrFail($campaign_id);
 
-            // Load campaign core fields
+            // Load campaign core fields with null coalescence
             $this->name = $this->campaign->name ?? '';
-            $this->operator_id = (string) $this->campaign->operator_id;
-            $this->market_id = (string) $this->campaign->market_id;
-            $this->start_at = $this->campaign->start_at?->format('Y-m-d\TH:i') ?? '';
-            $this->end_at = $this->campaign->end_at?->format('Y-m-d\TH:i') ?? '';
+            $this->operator_id = (string) ($this->campaign->operator_id ?? '');
+            $this->market_id = (string) ($this->campaign->market_id ?? '');
+
+            // Safe date formatting
+            $this->start_at = $this->campaign->start_at
+                ? $this->campaign->start_at->format('Y-m-d\TH:i')
+                : '';
+            $this->end_at = $this->campaign->end_at
+                ? $this->campaign->end_at->format('Y-m-d\TH:i')
+                : '';
+
             $this->status = $this->campaign->status ?? 'disabled';
             $this->priority = $this->campaign->priority ?? 1;
             $this->duration = $this->campaign->duration ? (string) $this->campaign->duration : '';
@@ -194,46 +218,17 @@ class CampaignManager extends Component
             $this->dom_selector = $this->campaign->dom_selector ?? '';
             $this->globalLogic = $this->campaign->global_logic ?? 'AND';
 
-            // Load websites
-            if ($this->campaign->campaignWebsites->count() > 0) {
-                $this->websites = $this->campaign->campaignWebsites->map(function ($website) {
-                    return [
-                        'id' => $website->id,
-                        'website_id' => (string) $website->website_id,
-                        'priority' => $website->priority,
-                        'dom_selector' => $website->dom_selector ?? '',
-                        'custom_affiliate_url' => $website->custom_affiliate_url ?? '',
-                        'timer_offset' => $website->timer_offset ? (string) $website->timer_offset : '',
-                    ];
-                })->toArray();
-            } else {
-                $this->initializeEmptyWebsites();
-            }
+            // Load websites with safety checks
+            $this->loadCampaignWebsites();
 
-            // Load trigger groups with triggers
-            if ($this->campaign->campaignTriggerGroups->count() > 0) {
-                $this->groups = $this->campaign->campaignTriggerGroups->sortBy('order_index')->map(function ($group) {
-                    return [
-                        'id' => $group->id,
-                        'name' => $group->name,
-                        'logic' => $group->logic,
-                        'order_index' => $group->order_index,
-                        'triggers' => $group->campaignTriggers->sortBy('order_index')->map(function ($trigger) {
-                            return [
-                                'id' => $trigger->id,
-                                'type' => $trigger->type,
-                                'operator' => $trigger->operator,
-                                'value' => $trigger->value,
-                                'description' => $trigger->description ?? '',
-                                'order_index' => $trigger->order_index,
-                            ];
-                        })->values()->toArray(),
-                    ];
-                })->values()->toArray();
-            } else {
-                $this->initializeEmptyGroups();
-            }
+            // Load trigger groups with safety checks
+            $this->loadCampaignTriggerGroups();
         } catch (\Exception $e) {
+            Log::error('Campaign loading error: ' . $e->getMessage(), [
+                'campaign_id' => $campaign_id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             session()->flash('error', 'Campaign not found or could not be loaded.');
             return redirect()->route('campaigns.index');
         }
@@ -330,15 +325,21 @@ class CampaignManager extends Component
 
     public function removeGroup($groupIndex)
     {
-        if (count($this->groups) > 1) {
-            unset($this->groups[$groupIndex]);
-            $this->groups = array_values($this->groups);
+        if (count($this->groups) > 1 && isset($this->groups[$groupIndex])) {
+            // Remove the group
+            array_splice($this->groups, $groupIndex, 1);
 
-            // Reorder remaining groups
-            foreach ($this->groups as $index => &$group) {
-                $group['order_index'] = $index;
-            }
+            // Reorder indices properly
+            $this->reorderGroups();
         }
+    }
+
+    private function reorderGroups()
+    {
+        foreach ($this->groups as $index => &$group) {
+            $group['order_index'] = $index;
+        }
+        unset($group); // Break reference
     }
 
     public function moveGroupUp($groupIndex)
@@ -389,14 +390,27 @@ class CampaignManager extends Component
 
     public function removeTrigger($groupIndex, $triggerIndex)
     {
-        if (count($this->groups[$groupIndex]['triggers']) > 1) {
-            unset($this->groups[$groupIndex]['triggers'][$triggerIndex]);
-            $this->groups[$groupIndex]['triggers'] = array_values($this->groups[$groupIndex]['triggers']);
+        if (
+            isset($this->groups[$groupIndex]) &&
+            count($this->groups[$groupIndex]['triggers']) > 1 &&
+            isset($this->groups[$groupIndex]['triggers'][$triggerIndex])
+        ) {
 
-            // Reorder remaining triggers
+            // Remove the trigger
+            array_splice($this->groups[$groupIndex]['triggers'], $triggerIndex, 1);
+
+            // Reorder triggers
+            $this->reorderTriggers($groupIndex);
+        }
+    }
+
+    private function reorderTriggers($groupIndex)
+    {
+        if (isset($this->groups[$groupIndex])) {
             foreach ($this->groups[$groupIndex]['triggers'] as $index => &$trigger) {
                 $trigger['order_index'] = $index;
             }
+            unset($trigger); // Break reference
         }
     }
 
@@ -429,12 +443,55 @@ class CampaignManager extends Component
     // Live validation methods
     public function updated($propertyName)
     {
-        // Skip validation for certain properties to avoid issues
-        if (str_contains($propertyName, '.')) {
-            $this->validateOnly($propertyName);
-        } else {
-            $this->validateOnly($propertyName);
+        // Skip validation during array manipulations to prevent conflicts
+        if ($this->isArrayManipulation($propertyName)) {
+            return;
         }
+
+        try {
+            $this->validateOnly($propertyName);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors for debugging
+            Log::debug('Validation error for property: ' . $propertyName, [
+                'errors' => $e->errors()
+            ]);
+        }
+    }
+
+    /*  private function isArrayManipulation($propertyName)
+    {
+        // Skip validation for certain operations that might cause conflicts
+        $skipPatterns = [
+            'groups.*.order_index',
+            'groups.*.triggers.*.order_index',
+            'websites.*.id'
+        ];
+
+        foreach ($skipPatterns as $pattern) {
+            if (fnmatch($pattern, $propertyName)) {
+                return true;
+            }
+        }
+
+        return false;
+    } */
+
+    private function isArrayManipulation($propertyName)
+    {
+        // Skip validation for certain operations that might cause conflicts
+        $skipPatterns = [
+            'groups.*.order_index',
+            'groups.*.triggers.*.order_index',
+            'websites.*.id'
+        ];
+
+        foreach ($skipPatterns as $pattern) {
+            if (fnmatch($pattern, $propertyName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function submit()
@@ -555,6 +612,73 @@ class CampaignManager extends Component
             }
         }
     }
+
+    private function loadCampaignWebsites()
+    {
+        if ($this->campaign->campaignWebsites && $this->campaign->campaignWebsites->count() > 0) {
+            $this->websites = $this->campaign->campaignWebsites->map(function ($website) {
+                return [
+                    'id' => $website->id,
+                    'website_id' => (string) $website->website_id,
+                    'priority' => $website->priority ?? 1,
+                    'dom_selector' => $website->dom_selector ?? '',
+                    'custom_affiliate_url' => $website->custom_affiliate_url ?? '',
+                    'timer_offset' => $website->timer_offset ? (string) $website->timer_offset : '1',
+                ];
+            })->toArray();
+        } else {
+            $this->initializeEmptyWebsites();
+        }
+    }
+
+    private function loadCampaignTriggerGroups()
+    {
+        if ($this->campaign->campaignTriggerGroups && $this->campaign->campaignTriggerGroups->count() > 0) {
+            $this->groups = $this->campaign->campaignTriggerGroups
+                ->sortBy('order_index')
+                ->map(function ($group) {
+                    $triggers = [];
+
+                    if ($group->campaignTriggers && $group->campaignTriggers->count() > 0) {
+                        $triggers = $group->campaignTriggers
+                            ->sortBy('order_index')
+                            ->map(function ($trigger) {
+                                return [
+                                    'id' => $trigger->id,
+                                    'type' => $trigger->type ?? '',
+                                    'operator' => $trigger->operator ?? '',
+                                    'value' => $trigger->value ?? '',
+                                    'description' => $trigger->description ?? '',
+                                    'order_index' => $trigger->order_index ?? 0,
+                                ];
+                            })->values()->toArray();
+                    } else {
+                        // If no triggers exist, create a default empty one
+                        $triggers = [
+                            [
+                                'id' => null,
+                                'type' => '',
+                                'operator' => '',
+                                'value' => '',
+                                'description' => '',
+                                'order_index' => 0,
+                            ]
+                        ];
+                    }
+
+                    return [
+                        'id' => $group->id,
+                        'name' => $group->name ?? '',
+                        'logic' => $group->logic ?? 'AND',
+                        'order_index' => $group->order_index ?? 0,
+                        'triggers' => $triggers,
+                    ];
+                })->values()->toArray();
+        } else {
+            $this->initializeEmptyGroups();
+        }
+    }
+
 
     public function render()
     {
