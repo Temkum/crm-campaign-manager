@@ -11,97 +11,6 @@
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'gradient': 'gradient 8s linear infinite',
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'slide-up': 'slideUp 0.8s ease-out',
-            'fade-in': 'fadeIn 1s ease-out',
-            'bounce-slow': 'bounce 3s infinite',
-          },
-          keyframes: {
-            gradient: {
-              '0%, 100%': {
-                'background-size': '200% 200%',
-                'background-position': 'left center'
-              },
-              '50%': {
-                'background-size': '200% 200%',
-                'background-position': 'right center'
-              }
-            },
-            float: {
-              '0%, 100%': {
-                transform: 'translateY(0px)'
-              },
-              '50%': {
-                transform: 'translateY(-20px)'
-              }
-            },
-            slideUp: {
-              '0%': {
-                transform: 'translateY(50px)',
-                opacity: '0'
-              },
-              '100%': {
-                transform: 'translateY(0)',
-                opacity: '1'
-              }
-            },
-            fadeIn: {
-              '0%': {
-                opacity: '0'
-              },
-              '100%': {
-                opacity: '1'
-              }
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    . {
-      /* Gradient removed */
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    . {
-      /* /* Gradient removed */
-      */ background-size: 200% 200%;
-      animation: gradient 8s ease infinite;
-    }
-
-    .card-hover {
-      transition: all 0.3s ease;
-    }
-
-    .card-hover:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-
-    . {
-      /* /* Gradient removed */
-      */ -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-  </style>
-
   <!-- Styles -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @livewireStyles
@@ -114,7 +23,7 @@
       <div class="flex justify-between items-center py-4">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-lg flex items-center justify-center">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-full h-full object-contain">
+            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo" class="w-full h-full object-contain">
           </div>
           <span class="text-xl font-bold">CampaignCompanion</span>
         </div>
@@ -338,11 +247,9 @@
     <div class="max-w-7xl mx-auto px-6 sm:px-8">
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="flex items-center space-x-3 mb-4 md:mb-0">
-          <div class="w-8 h-8 rounded-lg bg-purple-700 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
-              </path>
-            </svg>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center">
+            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo"
+              class="w-full h-full object-contain">
           </div>
           <span class="text-lg font-bold">CampaignCompanion</span>
         </div>
