@@ -18,7 +18,10 @@ COPY vite.config.js ./
 COPY public ./public
 
 # Build assets with production optimization
-RUN pnpm build
+RUN pnpm build && \
+    echo "Build completed, checking output..." && \
+    ls -la public/build/ && \
+    find public/build -type f -name "*.json"
 
 # Stage 2: PHP with Laravel
 FROM php:8.3-fpm-alpine
