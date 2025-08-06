@@ -98,47 +98,41 @@ RUN echo '[PHP]' > /usr/local/etc/php/conf.d/99-custom.ini && \
     echo 'opcache.enable = 1' >> /usr/local/etc/php/conf.d/99-custom.ini && \
     echo 'opcache.memory_consumption = 128' >> /usr/local/etc/php/conf.d/99-custom.ini
 
-# Create nginx configuration
-RUN echo 'user www-data;' > /etc/nginx/nginx.conf && \
-    echo 'worker_processes auto;' >> /etc/nginx/nginx.conf && \
-    echo 'pid /var/run/nginx.pid;' >> /etc/nginx/nginx.conf && \
-    echo 'error_log /var/log/nginx/error.log warn;' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo 'events {' >> /etc/nginx/nginx.conf && \
-    echo '    worker_connections 1024;' >> /etc/nginx/nginx.conf && \
-    echo '}' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo 'http {' >> /etc/nginx/nginx.conf && \
-    echo '    include /etc/nginx/mime.types;' >> /etc/nginx/nginx.conf && \
-    echo '    default_type application/octet-stream;' >> /etc/nginx/nginx.conf && \
-    echo '    sendfile on;' >> /etc/nginx/nginx.conf && \
-    echo '    keepalive_timeout 65;' >> /etc/nginx/nginx.conf && \
-    echo '    client_max_body_size 25M;' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo '    server {' >> /etc/nginx/nginx.conf && \
-    echo '        listen 80;' >> /etc/nginx/nginx.conf && \
-    echo '        server_name _;' >> /etc/nginx/nginx.conf && \
-    echo '        root /var/www/html/public;' >> /etc/nginx/nginx.conf && \
-    echo '        index index.php;' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo '        location = /health {' >> /etc/nginx/nginx.conf && \
-    echo '            return 200 "healthy\\n";' >> /etc/nginx/nginx.conf && \
-    echo '            add_header Content-Type text/plain;' >> /etc/nginx/nginx.conf && \
-    echo '        }' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo '        location / {' >> /etc/nginx/nginx.conf && \
-    echo '            try_files $$uri $$uri/ /index.php?$$query_string;' >> /etc/nginx/nginx.conf && \
-    echo '        }' >> /etc/nginx/nginx.conf && \
-    echo '' >> /etc/nginx/nginx.conf && \
-    echo '        location ~ \\.php$$ {' >> /etc/nginx/nginx.conf && \
-    echo '            try_files $$uri =404;' >> /etc/nginx/nginx.conf && \
-    echo '            fastcgi_pass 127.0.0.1:9000;' >> /etc/nginx/nginx.conf && \
-    echo '            fastcgi_index index.php;' >> /etc/nginx/nginx.conf && \
-    echo '            fastcgi_param SCRIPT_FILENAME $$document_root$$fastcgi_script_name;' >> /etc/nginx/nginx.conf && \
-    echo '            include fastcgi_params;' >> /etc/nginx/nginx.conf && \
-    echo '        }' >> /etc/nginx/nginx.conf && \
-    echo '    }' >> /etc/nginx/nginx.conf && \
-    echo '}' >> /etc/nginx/nginx.conf
+# Create nginx configuration using printf to handle special characters properly
+RUN printf 'user www-data;\n' > /etc/nginx/nginx.conf && \
+    printf 'worker_processes auto;\n' >> /etc/nginx/nginx.conf && \
+    printf 'pid /var/run/nginx.pid;\n' >> /etc/nginx/nginx.conf && \
+    printf 'error_log /var/log/nginx/error.log warn;\n\n' >> /etc/nginx/nginx.conf && \
+    printf 'events {\n' >> /etc/nginx/nginx.conf && \
+    printf '    worker_connections 1024;\n' >> /etc/nginx/nginx.conf && \
+    printf '}\n\n' >> /etc/nginx/nginx.conf && \
+    printf 'http {\n' >> /etc/nginx/nginx.conf && \
+    printf '    include /etc/nginx/mime.types;\n' >> /etc/nginx/nginx.conf && \
+    printf '    default_type application/octet-stream;\n' >> /etc/nginx/nginx.conf && \
+    printf '    sendfile on;\n' >> /etc/nginx/nginx.conf && \
+    printf '    keepalive_timeout 65;\n' >> /etc/nginx/nginx.conf && \
+    printf '    client_max_body_size 25M;\n\n' >> /etc/nginx/nginx.conf && \
+    printf '    server {\n' >> /etc/nginx/nginx.conf && \
+    printf '        listen 80;\n' >> /etc/nginx/nginx.conf && \
+    printf '        server_name _;\n' >> /etc/nginx/nginx.conf && \
+    printf '        root /var/www/html/public;\n' >> /etc/nginx/nginx.conf && \
+    printf '        index index.php;\n\n' >> /etc/nginx/nginx.conf && \
+    printf '        location = /health {\n' >> /etc/nginx/nginx.conf && \
+    printf '            return 200 "healthy\\n";\n' >> /etc/nginx/nginx.conf && \
+    printf '            add_header Content-Type text/plain;\n' >> /etc/nginx/nginx.conf && \
+    printf '        }\n\n' >> /etc/nginx/nginx.conf && \
+    printf '        location / {\n' >> /etc/nginx/nginx.conf && \
+    printf '            try_files $uri $uri/ /index.php?$query_string;\n' >> /etc/nginx/nginx.conf && \
+    printf '        }\n\n' >> /etc/nginx/nginx.conf && \
+    printf '        location ~ \\.php$ {\n' >> /etc/nginx/nginx.conf && \
+    printf '            try_files $uri =404;\n' >> /etc/nginx/nginx.conf && \
+    printf '            fastcgi_pass 127.0.0.1:9000;\n' >> /etc/nginx/nginx.conf && \
+    printf '            fastcgi_index index.php;\n' >> /etc/nginx/nginx.conf && \
+    printf '            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\n' >> /etc/nginx/nginx.conf && \
+    printf '            include fastcgi_params;\n' >> /etc/nginx/nginx.conf && \
+    printf '        }\n' >> /etc/nginx/nginx.conf && \
+    printf '    }\n' >> /etc/nginx/nginx.conf && \
+    printf '}\n' >> /etc/nginx/nginx.conf
 
 # Create supervisor configuration (simplified, runs as root)
 RUN echo '[supervisord]' > /etc/supervisord.conf && \
