@@ -3,7 +3,21 @@ set -e
 
 echo "Starting Laravel application setup..."
 
-# Wait for PostgreSQL database to be ready (optional)
+# Validate environment variables
+: "${ENV_SUPERVISOR_PASSWORD:=default_password}"
+: "${ENV_NUM_WORKERS:=1}"
+: "${ENV_ENABLE_HORIZON:=true}"
+: "${ENV_APP_ENV:=production}"
+: "${ENV_APP_NAME:=Laravel}"
+export ENV_SUPERVISOR_PASSWORD ENV_NUM_WORKERS ENV_ENABLE_HORIZON ENV_APP_ENV ENV_APP_NAME
+
+# Verify supervisord.conf exists
+if [ ! -f /etc/supervisord.conf ]; then
+    echo "Error: /etc/supervisord.conf not found!"
+    exit 1
+fi
+
+# Wait for PostgreSQL database to be ready
 if [ -n "$DB_HOST" ]; then
     echo "Waiting for PostgreSQL connection..."
     until PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USERNAME" -d "$DB_DATABASE" -c '\q' >/dev/null 2>&1; do
@@ -40,6 +54,7 @@ fi
 # fi
 
 echo "Laravel application setup completed!"
+echo "Starting supervisord..."
 
 # Execute the main command
 exec "$@"

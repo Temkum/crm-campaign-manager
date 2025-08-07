@@ -23,7 +23,6 @@ ENV NODE_ENV=production
 # Build assets with production optimization and clean up
 RUN pnpm build && \
     rm -rf node_modules && \
-    # Check for manifest in both possible locations
     if [ -f public/build/manifest.json ]; then \
     echo "Found manifest in standard location"; \
     elif [ -f public/build/.vite/manifest.json ]; then \
@@ -49,7 +48,8 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     nginx \
-    supervisor \
+    python3 \
+    py3-pip \
     postgresql-client \
     postgresql-dev \
     autoconf \
@@ -89,6 +89,12 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.
 # Clean up build dependencies
 RUN apk del --no-cache autoconf gcc g++ make $PHPIZE_DEPS
 
+# Install Supervisor via pip
+RUN pip3 install --no-cache-dir supervisor --break-system-packages
+
+# Create laravel user and group
+RUN addgroup -S laravel && adduser -S laravel -G laravel
+
 WORKDIR /var/www/html
 
 # Install Composer
@@ -96,7 +102,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set up Composer cache for faster builds
 RUN mkdir -p /composer/cache && \
-    chown www-data:www-data /composer/cache
+    chown laravel:laravel /composer/cache
 ENV COMPOSER_HOME=/composer/cache
 
 # Create Laravel directory structure with correct permissions
@@ -104,21 +110,23 @@ RUN mkdir -p bootstrap/cache \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
-    storage/logs && \
-    chown -R www-data:www-data bootstrap storage && \
-    chmod -R 775 bootstrap storage
+    storage/logs \
+    /var/log/supervisor /var/run && \
+    chown -R laravel:laravel bootstrap storage /var/log/supervisor /var/run && \
+    chmod -R 775 bootstrap storage && \
+    chmod 755 /var/log/supervisor /var/run
 
 # Copy ONLY composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Switch to www-data user for Composer and Laravel operations
-USER www-data
+# Switch to laravel user for Composer and Laravel operations
+USER laravel
 
 # Install dependencies without running scripts
 RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader
 
 # Copy the entire application, including .env.example
-COPY --chown=www-data:www-data . .
+COPY --chown=laravel:laravel . .
 
 # Ensure .env file exists by copying from .env.example if needed
 RUN if [ ! -f .env ]; then \
@@ -139,7 +147,7 @@ RUN composer dump-autoload --optimize && \
 USER root
 
 # Copy built assets from node stage
-COPY --from=node_builder --chown=www-data:www-data /app/public/build ./public/build
+COPY --from=node_builder --chown=laravel:laravel /app/public/build ./public/build
 
 # Verify build assets
 RUN if [ ! -f public/build/manifest.json ]; then \
@@ -153,15 +161,25 @@ RUN echo "<?php\nif (app()->environment('production')) { \n    \URL::forceScheme
 # Copy production php.ini configuration
 COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
 
+# Copy PHP-FPM configuration
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Copy Nginx configuration
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy supervisord configuration
+COPY docker/supervisord.conf /etc/supervisord.conf
+RUN chmod 644 /etc/supervisord.conf
+
 # Copy entrypoint and make executable
 COPY docker/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Health check (adjusted to root route, assuming /health is not defined)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost/health || exit 1
 
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "-n"]
