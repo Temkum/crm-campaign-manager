@@ -165,7 +165,7 @@ RUN echo "<?php\nif (app()->environment('production')) { \n    \URL::forceScheme
 COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
 
 # Copy PHP-FPM configuration
-COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+# COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Copy Nginx configuration
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
