@@ -92,9 +92,9 @@ COPY docker/prod/php.ini /usr/local/etc/php/conf.d/production.ini
 # Stage 3: Final production image
 FROM php_base
 
-# Create application user
-RUN groupadd -g 1000 laravel && \
-    useradd -u 1000 -g laravel -d /var/www/html -s /bin/sh laravel && \
+# Create application user with Alpine-compatible commands
+RUN addgroup -g 1000 -S laravel && \
+    adduser -u 1000 -S laravel -G laravel -h /var/www/html -s /bin/sh && \
     mkdir -p /var/www/html && \
     chown laravel:laravel /var/www/html
 
