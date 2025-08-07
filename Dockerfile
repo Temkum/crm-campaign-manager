@@ -111,9 +111,12 @@ RUN mkdir -p bootstrap/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
-    /var/log/supervisor /var/run && \
-    chown -R laravel:laravel bootstrap storage /var/log/supervisor /var/run && \
-    chmod -R 775 bootstrap storage && \
+    /var/log/supervisor \
+    /var/log/php-fpm \
+    /var/www/html/storage/app/tmp \
+    /var/run && \
+    chown -R laravel:laravel bootstrap storage /var/log/supervisor /var/log/php-fpm /var/run /var/www/html/storage && \
+    chmod -R 775 bootstrap storage /var/log/php-fpm /var/www/html/storage && \
     chmod 755 /var/log/supervisor /var/run
 
 # Copy ONLY composer files first for better caching

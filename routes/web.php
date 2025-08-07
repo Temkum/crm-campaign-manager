@@ -68,6 +68,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/operators/create', AddOperator::class)->name('operators.create');
         Route::get('/operators/{operator}/edit', EditOperator::class)->name('operators.edit');
     });
+
+    Route::get('/health', function () {
+        return response()->json(['status' => 'ok']);
+    });
 });
 
 require __DIR__ . '/auth.php';
