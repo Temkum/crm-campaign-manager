@@ -92,32 +92,30 @@ RUN apk del --no-cache autoconf gcc g++ make $PHPIZE_DEPS
 
 WORKDIR /var/www/html
 
-# Install Composer
+#  Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy ONLY composer files first
+# 1. Copy ONLY composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Create Laravel directory structure with proper permissions
+# Create Laravel directory structure
 RUN mkdir -p bootstrap/cache \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
-    storage/logs && \
-    chown -R www-data:www-data bootstrap storage && \
-    chmod -R 775 bootstrap storage
+    storage/logs
 
-# 1. First install dependencies without scripts
+# 2. Install dependencies without running scripts
 USER www-data
 RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader
 
-# 2. Copy the entire application
+# 3. Copy the entire application
 COPY --chown=www-data:www-data . .
 
-# 3. Now run post-install scripts
-RUN composer run-script post-install-cmd
+# 4. Run Laravel's package discovery manually
+RUN php artisan package:discover --ansi
 
-# Optimize Laravel
+# 5. Optimize Laravel
 RUN composer dump-autoload --optimize && \
     php artisan config:cache && \
     php artisan route:cache && \
