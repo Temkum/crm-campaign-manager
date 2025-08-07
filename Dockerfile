@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install ALL dependencies (including dev dependencies needed for build)
-RUN pnpm install --frozen-lockfile  # Removed --prod flag
+RUN pnpm install --frozen-lockfile
 
 # Copy source files and build
 COPY resources ./resources
@@ -20,10 +20,9 @@ COPY public ./public
 # Set environment to production for proper Vite build
 ENV NODE_ENV=production
 
-# Build assets with production optimization
+# Build assets with production optimization and clean up
 RUN pnpm build && \
-    echo "Build completed, checking output..." && \
-    ls -la public/build/ && \
+    rm -rf node_modules && \
     # Check for manifest in both possible locations
     if [ -f public/build/manifest.json ]; then \
     echo "Found manifest in standard location"; \
@@ -92,30 +91,39 @@ RUN apk del --no-cache autoconf gcc g++ make $PHPIZE_DEPS
 
 WORKDIR /var/www/html
 
-#  Install Composer
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 1. Copy ONLY composer files first for better caching
-COPY composer.json composer.lock ./
+# Set up Composer cache for faster builds
+RUN mkdir -p /composer/cache && \
+    chown www-data:www-data /composer/cache
+ENV COMPOSER_HOME=/composer/cache
 
-# Create Laravel directory structure
+# Create Laravel directory structure with correct permissions
 RUN mkdir -p bootstrap/cache \
     storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
-    storage/logs
+    storage/logs && \
+    chown -R www-data:www-data bootstrap storage && \
+    chmod -R 775 bootstrap storage
 
-# 2. Install dependencies without running scripts
+# Copy ONLY composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Switch to www-data user for Composer and Laravel operations
 USER www-data
+
+# Install dependencies without running scripts
 RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader
 
-# 3. Copy the entire application
+# Copy the entire application
 COPY --chown=www-data:www-data . .
 
-# 4. Run Laravel's package discovery manually
+# Run Laravel's package discovery manually
 RUN php artisan package:discover --ansi
 
-# 5. Optimize Laravel
+# Optimize Laravel
 RUN composer dump-autoload --optimize && \
     php artisan config:cache && \
     php artisan route:cache && \
@@ -128,9 +136,7 @@ USER root
 COPY --from=node_builder --chown=www-data:www-data /app/public/build ./public/build
 
 # Verify build assets
-RUN echo "Build assets verification:" && \
-    ls -la public/build/ && \
-    if [ ! -f public/build/manifest.json ]; then \
+RUN if [ ! -f public/build/manifest.json ]; then \
     echo "Error: Production manifest file not found!"; \
     exit 1; \
     fi
@@ -145,9 +151,9 @@ COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
 COPY docker/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Health check
+# Health check (adjusted to root route, assuming /health is not defined)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost/ || exit 1
 
 EXPOSE 80
 
