@@ -109,24 +109,21 @@ COPY --chown=laravel:laravel . .
 # Copy built assets from node stage
 COPY --from=node_builder --chown=laravel:laravel /app/public/build ./public/build
 
-# Runtime directories
+# Pre-create storage and cache directories BEFORE composer install
 RUN mkdir -p \
+    storage/app \
     storage/framework/{cache,sessions,views} \
     storage/logs \
     bootstrap/cache && \
-    chown -R laravel:laravel \
-    storage \
-    bootstrap/cache && \
-    chmod -R 775 \
-    storage \
-    bootstrap/cache
+    chown -R laravel:laravel storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
-# Production Composer install (no dev dependencies)
+# Composer install
 USER laravel
 RUN composer install --no-dev --no-interaction --optimize-autoloader --ignore-platform-reqs && \
     composer dump-autoload --optimize
 
-# Production optimizations
+# Laravel caches
 RUN php artisan config:cache && \
     php artisan route:cache && \
     php artisan view:cache
