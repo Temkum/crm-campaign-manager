@@ -117,8 +117,14 @@ USER www-data
 # Install dependencies without running scripts
 RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader
 
-# Copy the entire application
+# Copy the entire application, including .env.example
 COPY --chown=www-data:www-data . .
+
+# Ensure .env file exists by copying from .env.example if needed
+RUN if [ ! -f .env ]; then \
+    cp .env.example .env && \
+    echo "Copied .env.example to .env"; \
+    fi
 
 # Run Laravel's package discovery manually
 RUN php artisan package:discover --ansi
