@@ -1,188 +1,137 @@
-# Stage 1: Build assets using Node and pnpm
+# Stage 1: Node builder for Vite assets
 FROM node:20-alpine AS node_builder
 
-# Install pnpm
-RUN corepack enable pnpm
+# Install pnpm and build dependencies
+RUN corepack enable && \
+    apk add --no-cache git python3 make g++
 
 WORKDIR /app
 
-# Copy package files first for better layer caching
-COPY package.json pnpm-lock.yaml ./
+# Cache pnpm dependencies
+COPY package.json pnpm-lock.yaml .npmrc ./
+RUN pnpm install --frozen-lockfile --prod=false
 
-# Install ALL dependencies (including dev dependencies needed for build)
-RUN pnpm install --frozen-lockfile
-
-# Copy source files and build
+# Copy and build assets
 COPY resources ./resources
-COPY vite.config.js ./
+COPY vite.config.js tailwind.config.js postcss.config.js ./
 COPY public ./public
 
-# Set environment to production for proper Vite build
-ENV NODE_ENV=production
+ARG VITE_APP_ENV=production
+ARG VITE_APP_URL
+ARG VITE_APP_NAME
 
-# Build assets with production optimization and clean up
 RUN pnpm build && \
-    rm -rf node_modules && \
-    if [ -f public/build/manifest.json ]; then \
-    echo "Found manifest in standard location"; \
-    elif [ -f public/build/.vite/manifest.json ]; then \
-    echo "Found Vite manifest in .vite directory"; \
-    mkdir -p public/build && \
-    cp public/build/.vite/manifest.json public/build/manifest.json; \
-    else \
-    echo "Error: No manifest file found in build output!"; \
+    # Verify build output
+    if [ ! -f public/build/manifest.json ]; then \
+    echo "Error: Vite manifest not found!"; \
+    find public/build -type f; \
     exit 1; \
-    fi
+    fi && \
+    # Clean up dev dependencies
+    pnpm prune --prod && \
+    rm -rf node_modules/.cache
 
-# Stage 2: PHP with Laravel
-FROM php:8.3-fpm-alpine
+# Stage 2: PHP base with extensions
+FROM php:8.3-fpm-alpine AS php_base
 
-# Install system dependencies including PostgreSQL
+# Production-only dependencies
 RUN apk add --no-cache \
-    bash \
-    git \
-    curl \
-    zip \
-    unzip \
+    nginx \
+    supervisor \
+    postgresql-dev \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
-    nginx \
-    python3 \
-    py3-pip \
-    postgresql-client \
-    postgresql-dev \
-    autoconf \
-    gcc \
-    g++ \
-    make \
     libpng-dev \
     libxml2-dev \
-    openssl-dev \
-    $PHPIZE_DEPS
+    shadow
 
-# Install core PHP extensions including PostgreSQL
+# Install production PHP extensions
 RUN docker-php-ext-install \
+    opcache \
     pdo \
     pdo_pgsql \
     pgsql \
+    bcmath \
     intl \
     zip \
-    bcmath \
-    pcntl \
-    opcache \
-    gd
-
-# Install Redis via PECL
-RUN pecl update-channels && \
+    gd \
+    pcntl && \
     pecl install redis && \
-    docker-php-ext-enable redis
+    docker-php-ext-enable redis && \
+    apk del --no-cache .build-deps
 
-# Configure OPcache for production
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.interned_strings_buffer=8" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.max_accelerated_files=4000" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.revalidate_freq=2" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
-    echo "opcache.fast_shutdown=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+# Production php.ini
+COPY docker/prod/php.ini /usr/local/etc/php/conf.d/production.ini
 
-# Clean up build dependencies
-RUN apk del --no-cache autoconf gcc g++ make $PHPIZE_DEPS
+# Stage 3: Final production image
+FROM php_base
 
-# Install Supervisor via pip
-RUN pip3 install --no-cache-dir supervisor --break-system-packages
-
-# Create laravel user and group
-RUN addgroup -S laravel && adduser -S laravel -G laravel
+# Create application user
+RUN groupadd -g 1000 laravel && \
+    useradd -u 1000 -g laravel -d /var/www/html -s /bin/sh laravel && \
+    mkdir -p /var/www/html && \
+    chown laravel:laravel /var/www/html
 
 WORKDIR /var/www/html
 
-# Install Composer
+# Install production Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set up Composer cache for faster builds
-RUN mkdir -p /composer/cache && \
-    chown laravel:laravel /composer/cache
-ENV COMPOSER_HOME=/composer/cache
-
-# Create Laravel directory structure with correct permissions
-RUN mkdir -p bootstrap/cache \
-    storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/logs \
-    /var/log/supervisor \
-    /var/log/php-fpm \
-    /var/www/html/storage/app/tmp \
-    /var/run && \
-    chown -R laravel:laravel bootstrap storage /var/log/supervisor /var/log/php-fpm /var/run /var/www/html/storage && \
-    chmod -R 775 bootstrap storage /var/log/php-fpm /var/www/html/storage && \
-    chmod 755 /var/log/supervisor /var/run
-
-# Copy ONLY composer files first for better caching
-COPY composer.json composer.lock ./
-
-# Switch to laravel user for Composer and Laravel operations
-USER laravel
-
-# Install dependencies without running scripts
-RUN composer install --no-dev --no-scripts --no-interaction --optimize-autoloader
-
-# Copy the entire application, including .env.example
+# Copy application files with proper permissions
 COPY --chown=laravel:laravel . .
-
-# Ensure .env file exists by copying from .env.example if needed
-RUN if [ ! -f .env ]; then \
-    cp .env.example .env && \
-    echo "Copied .env.example to .env"; \
-    fi
-
-# Run Laravel's package discovery manually
-RUN php artisan package:discover --ansi
-
-# Optimize Laravel
-RUN composer dump-autoload --optimize && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
-
-# Switch back to root for system operations
-USER root
 
 # Copy built assets from node stage
 COPY --from=node_builder --chown=laravel:laravel /app/public/build ./public/build
 
-# Verify build assets
-RUN if [ ! -f public/build/manifest.json ]; then \
-    echo "Error: Production manifest file not found!"; \
-    exit 1; \
-    fi
+# Runtime directories
+RUN mkdir -p \
+    storage/framework/{cache,sessions,views} \
+    storage/logs \
+    bootstrap/cache && \
+    chown -R laravel:laravel \
+    storage \
+    bootstrap/cache && \
+    chmod -R 775 \
+    storage \
+    bootstrap/cache
 
-# Laravel: force HTTPS in production
-RUN echo "<?php\nif (app()->environment('production')) { \n    \URL::forceScheme('https'); \n}" > app/Providers/ForceHttps.php
+# Production Composer install (no dev dependencies)
+USER laravel
+RUN composer install --no-dev --no-interaction --optimize-autoloader --ignore-platform-reqs && \
+    composer dump-autoload --optimize
 
-# Copy production php.ini configuration
-COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
+# Production optimizations
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
-# Copy PHP-FPM configuration
-# COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+USER root
 
-# Copy Nginx configuration
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Configure supervisor
+COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy supervisord configuration
-COPY docker/supervisord.conf /etc/supervisord.conf
-RUN chmod 644 /etc/supervisord.conf
+# Configure nginx
+COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
+COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
 
-# Copy entrypoint and make executable
-COPY docker/entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Health check endpoint
+COPY docker/prod/healthcheck.php /var/www/html/public/health
 
-# Health check
+# Entrypoint
+COPY docker/prod/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
+
+# Render-specific optimizations
+ENV APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    OPACHE_ENABLE=1
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
 
-EXPOSE 80
+EXPOSE 8000
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "-n"]
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

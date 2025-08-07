@@ -1,35 +1,31 @@
 services:
   - type: web
-    name: laravel-app
+    name: crm-manager
+    runtime: docker
     env: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: ./docker/prod/render-build.sh
+    startCommand: /usr/local/bin/entrypoint
+    healthCheckPath: /health
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_KEY
         generateValue: true
-      - key: DB_CONNECTION
-        value: mysql
       - key: DB_HOST
         fromDatabase:
-          name: laravel-db
+          name: crm-pg
           property: host
-      - key: DB_PORT
-        value: "3306"
-      - key: DB_DATABASE
-        fromDatabase:
-          name: laravel-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: laravel-db
-          property: user
       - key: DB_PASSWORD
         fromDatabase:
-          name: laravel-db
+          name: crm-pg
           property: password
+    scaling:
+      instances: 1
+      memory: 2GB
+      cpu: 1
 
 databases:
-  - name: laravel-db
+  - name: crm-pg
     plan: free
+    databaseName: crm_production
+    user: crm_user

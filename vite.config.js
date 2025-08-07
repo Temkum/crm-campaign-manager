@@ -8,6 +8,12 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    define: {
+        "process.env": {
+            VITE_APP_NAME: JSON.stringify(process.env.VITE_APP_NAME),
+            VITE_APP_URL: JSON.stringify(process.env.VITE_APP_URL),
+        },
+    },
     build: {
         manifest: true,
         outDir: "public/build",
