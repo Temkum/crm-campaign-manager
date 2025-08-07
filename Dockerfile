@@ -24,8 +24,15 @@ ENV NODE_ENV=production
 RUN pnpm build && \
     echo "Build completed, checking output..." && \
     ls -la public/build/ && \
-    if [ ! -f public/build/manifest.json ]; then \
-    echo "Error: Manifest file not found in build output!"; \
+    # Check for manifest in both possible locations
+    if [ -f public/build/manifest.json ]; then \
+    echo "Found manifest in standard location"; \
+    elif [ -f public/build/.vite/manifest.json ]; then \
+    echo "Found Vite manifest in .vite directory"; \
+    mkdir -p public/build && \
+    cp public/build/.vite/manifest.json public/build/manifest.json; \
+    else \
+    echo "Error: No manifest file found in build output!"; \
     exit 1; \
     fi
 
