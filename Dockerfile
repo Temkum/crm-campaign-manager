@@ -8,7 +8,7 @@ RUN corepack enable && \
 WORKDIR /app
 
 # Cache pnpm dependencies
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod=false
 
 # Copy and build assets
