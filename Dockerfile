@@ -39,10 +39,13 @@ RUN pnpm build && \
 # Stage 2: PHP base with extensions
 FROM php:8.3-fpm-alpine AS php_base
 
-# Production-only dependencies
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
+# Install build dependencies first
+RUN apk add --no-cache --virtual .build-deps \
+    $PHPIZE_DEPS \
+    autoconf \
+    make \
+    g++ \
+    linux-headers \
     postgresql-dev \
     libzip-dev \
     icu-dev \
@@ -51,7 +54,19 @@ RUN apk add --no-cache \
     libxml2-dev \
     shadow
 
-# Install production PHP extensions
+# Install runtime dependencies
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    postgresql-client \
+    libzip \
+    icu \
+    oniguruma \
+    libpng \
+    libxml2 \
+    libstdc++
+
+# Install PHP extensions
 RUN docker-php-ext-install \
     opcache \
     pdo \
@@ -61,10 +76,15 @@ RUN docker-php-ext-install \
     intl \
     zip \
     gd \
-    pcntl && \
-    pecl install redis && \
-    docker-php-ext-enable redis && \
-    apk del --no-cache .build-deps
+    pcntl
+
+# Install Redis extension
+RUN pecl install -o -f redis \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/pear
+
+# Clean up build dependencies
+RUN apk del --no-cache .build-deps
 
 # Production php.ini
 COPY docker/prod/php.ini /usr/local/etc/php/conf.d/production.ini
