@@ -131,10 +131,10 @@ RUN echo "Build assets verification:" && \
 RUN echo "<?php\nif (app()->environment('production')) { \n    \URL::forceScheme('https'); \n}" > app/Providers/ForceHttps.php
 
 # Copy production php.ini configuration
-COPY php.ini /usr/local/etc/php/conf.d/php.ini
+COPY docker/php.ini /usr/local/etc/php/conf.d/php.ini
 
 # Copy entrypoint and make executable
-COPY entrypoint.sh /usr/local/bin/
+COPY docker/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Health check
