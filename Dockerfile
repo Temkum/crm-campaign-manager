@@ -84,10 +84,14 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 # Copy application source
 COPY . .
 
-# Ensure bootstrap/cache exists and is writable
-RUN mkdir -p bootstrap/cache && \
-    chown -R www-data:www-data bootstrap/cache && \
-    chmod -R 775 bootstrap/cache
+# Ensure required Laravel directories exist
+RUN mkdir -p bootstrap/cache \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs && \
+    chown -R www-data:www-data bootstrap storage && \
+    chmod -R 775 bootstrap storage
 
 # Re-optimize autoload in case new files were copied
 RUN composer dump-autoload --optimize
