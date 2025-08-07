@@ -35,12 +35,12 @@
         <div class="flex space-x-4">
           @auth
             <a href="/dashboard"
-              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
+              class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
           @else
             <a href="http://localhost:8000/login"
-              class="px-6 py-2 text-purple-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
+              class="px-6 py-2 text-cyan-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
             <a href="/register"
-              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
+              class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
               Started</a>
           @endauth
         </div>
@@ -50,12 +50,12 @@
 
   <!-- Hero Section -->
   <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
-    <div class="absolute inset-0 bg-purple-900 opacity-10"></div>
+    <div class="absolute inset-0 bg-cyan-900 opacity-10"></div>
 
     <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden">
       <div
-        class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
+        class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
       </div>
       <div
         class="absolute top-3/4 right-1/4 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
@@ -77,7 +77,7 @@
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <button
-            class="px-8 py-4 bg-purple-700 hover:bg-purple-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
+            class="px-8 py-4 bg-cyan-700 hover:bg-cyan-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
             Start Free Trial
           </button>
           <button
@@ -94,15 +94,15 @@
       <!-- Stats -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 animate-fade-in" style="animation-delay: 0.5s;">
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-purple-400 mb-2">10K+</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">10K+</div>
           <div class="text-gray-400">Active Campaigns</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-indigo-400 mb-2">500+</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">500+</div>
           <div class="text-gray-400">Happy Clients</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-pink-400 mb-2">99.9%</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">99.9%</div>
           <div class="text-gray-400">Uptime</div>
         </div>
         <div class="text-center">
@@ -129,7 +129,7 @@
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <!-- Feature 1 -->
         <div class="glass-effect rounded-2xl p-8 card-hover">
-          <div class="w-16 h-16 bg-purple-700 rounded-xl flex items-center justify-center mb-6">
+          <div class="w-16 h-16 bg-cyan-700 rounded-xl flex items-center justify-center mb-6">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
               </path>
@@ -157,7 +157,7 @@
 
         <!-- Feature 3 -->
         <div class="glass-effect rounded-2xl p-8 card-hover">
-          <div class="w-16 h-16 bg-purple-700 rounded-xl flex items-center justify-center mb-6">
+          <div class="w-16 h-16 bg-cyan-700 rounded-xl flex items-center justify-center mb-6">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4">
@@ -218,7 +218,7 @@
 
   <!-- CTA Section -->
   <section class="py-20 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-cyan-600 to-indigo-600 opacity-10"></div>
     <div class="max-w-4xl mx-auto text-center px-6 sm:px-8 relative z-10">
       <h2 class="text-4xl md:text-5xl font-bold mb-6">
         Ready to Transform Your
@@ -231,7 +231,7 @@
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <button
-          class="px-8 py-4 bg-purple-700 hover:bg-purple-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
+          class="px-8 py-4 bg-cyan-700 hover:bg-cyan-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
           Start Your Free Trial
         </button>
         <button
