@@ -171,8 +171,10 @@
                     class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ $campaign->name }}</div>
-                  <div class="text-sm text-gray-500">ID: {{ $campaign->id }}</div>
+                  <a href="{{ route('campaigns.edit', $campaign->id) }}">
+                    <div class="text-sm font-medium text-gray-900">{{ $campaign->name }}</div>
+                    <div class="text-sm text-gray-500">ID: {{ $campaign->id }}</div>
+                  </a>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span
@@ -278,7 +280,7 @@
                 </td>
                 <td class="px-4 py-2 text-sm text-gray-500">
                   {{ $deployment->deployed_at?->format('M j, Y
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    H:i') }}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        H:i') }}
                 </td>
                 <td class="px-4 py-2 text-sm">
                   @if (isset($deployment->metadata['verification']))
