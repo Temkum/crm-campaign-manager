@@ -3,14 +3,14 @@ set -e
 
 echo "Starting Laravel application setup..."
 
-# Wait for database to be ready (optional)
+# Wait for PostgreSQL database to be ready (optional)
 if [ -n "$DB_HOST" ]; then
-    echo "Waiting for database connection..."
-    until mysql -h"$DB_HOST" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; do
-        echo "Database not ready, waiting..."
+    echo "Waiting for PostgreSQL connection..."
+    until PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USERNAME" -d "$DB_DATABASE" -c '\q' >/dev/null 2>&1; do
+        echo "PostgreSQL not ready, waiting..."
         sleep 2
     done
-    echo "Database is ready!"
+    echo "PostgreSQL is ready!"
 fi
 
 # Generate application key if it doesn't exist
