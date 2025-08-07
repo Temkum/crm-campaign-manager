@@ -9,8 +9,8 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies (production only)
-RUN pnpm install --frozen-lockfile --prod
+# Install ALL dependencies (including dev dependencies needed for build)
+RUN pnpm install --frozen-lockfile  # Removed --prod flag
 
 # Copy source files and build
 COPY resources ./resources
