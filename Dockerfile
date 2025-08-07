@@ -84,6 +84,11 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 # Copy application source
 COPY . .
 
+# Ensure bootstrap/cache exists and is writable
+RUN mkdir -p bootstrap/cache && \
+    chown -R www-data:www-data bootstrap/cache && \
+    chmod -R 775 bootstrap/cache
+
 # Re-optimize autoload in case new files were copied
 RUN composer dump-autoload --optimize
 
@@ -110,7 +115,7 @@ RUN chown -R www-data:www-data public/build && \
     chmod -R 755 public/build
 
 # Laravel: force HTTPS in production
-RUN echo "<?php\\nif (app()->environment('production')) { \\n    \\URL::forceScheme('https'); \\n}" > app/Providers/ForceHttps.php
+RUN echo "<?php\nif (app()->environment('production')) { \n    \URL::forceScheme('https'); \n}" > app/Providers/ForceHttps.php
 
 # Reminder: add to AppServiceProvider manually if needed.
 
