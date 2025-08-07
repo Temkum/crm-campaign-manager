@@ -116,7 +116,7 @@ COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
 
 # Health check endpoint
-COPY docker/prod/healthcheck.php /var/www/html/public/health
+# COPY docker/prod/healthcheck.php /var/www/html/public/health
 
 # Entrypoint
 COPY docker/prod/entrypoint.sh /usr/local/bin/entrypoint
