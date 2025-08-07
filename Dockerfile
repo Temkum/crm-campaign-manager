@@ -21,11 +21,16 @@ ARG VITE_APP_URL
 ARG VITE_APP_NAME
 
 RUN pnpm build && \
-    # Verify build output
-    if [ ! -f public/build/manifest.json ]; then \
-    echo "Error: Vite manifest not found!"; \
+    # Handle both Vite 3 and 4 manifest locations
+    if [ ! -f public/build/manifest.json ] && [ ! -f public/build/.vite/manifest.json ]; then \
+    echo "Error: Vite manifest not found in either location!"; \
     find public/build -type f; \
     exit 1; \
+    fi && \
+    # Standardize manifest location for Laravel
+    if [ -f public/build/.vite/manifest.json ]; then \
+    mkdir -p public/build && \
+    cp public/build/.vite/manifest.json public/build/manifest.json; \
     fi && \
     # Clean up dev dependencies
     pnpm prune --prod && \
