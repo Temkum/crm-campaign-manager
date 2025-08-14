@@ -37,7 +37,7 @@ RUN pnpm build && \
     rm -rf node_modules/.cache
 
 # Stage 2: PHP base with extensions
-FROM php:8.3-fpm-alpine AS php_base
+FROM php:8.3-fpm-alpine AS production
 
 # Install build dependencies first
 RUN apk add --no-cache --virtual .build-deps \
@@ -90,7 +90,7 @@ RUN apk del --no-cache .build-deps
 COPY docker/prod/php.ini /usr/local/etc/php/conf.d/production.ini
 
 # Stage 3: Final production image
-FROM php_base
+FROM production
 
 # Create application user with Alpine-compatible commands
 RUN addgroup -g 1000 -S laravel && \
@@ -138,7 +138,7 @@ COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
 
 # Health check endpoint
-# COPY docker/prod/healthcheck.php /var/www/html/public/health
+COPY docker/prod/healthcheck.php /var/www/html/public/health
 
 # Entrypoint
 COPY docker/prod/entrypoint.sh /usr/local/bin/entrypoint
@@ -153,7 +153,7 @@ ENV APP_ENV=production \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost/health || exit 1
 
-EXPOSE 8000
+EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
