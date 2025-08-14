@@ -126,6 +126,12 @@ RUN mkdir -p \
     chown -R laravel:laravel storage bootstrap/cache /tmp/php_sessions /tmp/opcache && \
     chmod -R 775 storage bootstrap/cache /tmp/php_sessions /tmp/opcache
 
+# Create supervisor directories
+RUN mkdir -p \
+    /var/log/supervisor \
+    /var/run/supervisor && \
+    chmod 755 /var/log/supervisor /var/run/supervisor
+
 # Set proper permissions for Composer to work
 RUN chmod -R 775 storage bootstrap/cache
 
