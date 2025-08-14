@@ -49,6 +49,14 @@ build: ## Build Docker images for current environment
 	@echo "$(YELLOW)Building Docker images for $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILE) build
 
+test-build: ## Test Docker build process
+	@echo "$(YELLOW)Testing Docker build process...$(NC)"
+	./scripts/test-build.sh
+
+test-build-alt: ## Test Docker build with alternative Dockerfile (bypasses auth issues)
+	@echo "$(YELLOW)Testing Docker build with alternative Dockerfile...$(NC)"
+	./scripts/test-build-alt.sh
+
 up: ## Start services for current environment
 	@echo "$(YELLOW)Starting $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILE) up -d

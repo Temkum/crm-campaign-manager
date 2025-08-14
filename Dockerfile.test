@@ -1,3 +1,6 @@
+# Test Dockerfile with alternative base image
+# Use this to test if the issue is with the specific PHP image
+
 # Stage 1: Node builder for Vite assets
 FROM node:20-alpine AS node_builder
 
@@ -36,8 +39,8 @@ RUN pnpm build && \
     pnpm prune --prod && \
     rm -rf node_modules/.cache
 
-# Stage 2: PHP base with extensions
-FROM php:8.3-fpm-alpine AS production
+# Stage 2: PHP base with extensions (using different base image)
+FROM php:8.2-fpm-alpine AS production
 
 # Install build dependencies first
 RUN apk add --no-cache --virtual .build-deps \
@@ -173,4 +176,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
