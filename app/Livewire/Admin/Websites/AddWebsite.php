@@ -7,6 +7,7 @@ use App\Models\Website;
 use App\Enums\WebsiteTypeEnum;
 use Illuminate\Validation\Rules\Enum;
 use Livewire\Attributes\Layout;
+use Illuminate\Validation\Rule;
 
 /**
  * Livewire component for adding a new website.
@@ -26,8 +27,8 @@ class AddWebsite extends Component
     protected function rules(): array
     {
         return [
-            'url'        => ['required|unique:websites,url', 'url'],
-            'api_url'    => ['required|unique:websites,api_url', 'url'],
+            'url'        => ['required', 'url', Rule::unique('websites', 'url')],
+            'api_url'    => ['required', 'url', Rule::unique('websites', 'api_url')],
             'type'       => ['required', new Enum(WebsiteTypeEnum::class)],
             'auth_type'  => ['required', 'in:NONE,TOKEN,BASIC'],
             'auth_token' => ['required_if:auth_type,TOKEN', 'nullable', 'string'],
