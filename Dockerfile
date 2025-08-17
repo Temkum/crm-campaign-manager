@@ -170,6 +170,12 @@ COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
 RUN mkdir -p /etc/nginx/sites-enabled && \
     ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
+# Align PHP-FPM user/group with file ownership to prevent permission errors
+RUN sed -ri 's/^user = .*/user = laravel/' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -ri 's/^group = .*/group = laravel/' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -ri 's/^;?catch_workers_output =.*/catch_workers_output = yes/' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -ri 's/^;?clear_env =.*/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf
+
 # Health check endpoint
 COPY docker/prod/healthcheck.php /var/www/html/public/healthcheck.php
 

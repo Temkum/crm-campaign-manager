@@ -20,6 +20,10 @@ services:
           property: password
       - key: RUN_MIGRATIONS
         value: "true"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DISABLE_HTTPS_REDIRECT
+        value: "true"
     scaling:
       instances: 1
       memory: 2GB
