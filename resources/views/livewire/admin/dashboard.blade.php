@@ -1,5 +1,5 @@
 <div wire:poll.30s="refreshMetrics">
-  <!-- Overview Section -->
+  {{-- overview section --}}
   <section class="mb-8">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold">Overview</h2>
@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <!-- Metrics Grid -->
+    {{-- metrics grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
       <x-metric-card title="Campaigns Per Minute" value="{{ $metrics['campaigns_per_minute'] }}" change="12%"
         trend="up" icon="heroicon-o-clock" color="blue" />
@@ -33,8 +33,8 @@
     </div>
   </section>
 
-  <!-- Current Workload Section -->
-  <section class="mb-8">
+  {{-- current workload --}}
+  {{-- <section class="mb-8">
     <x-card title="Current Workload">
       <div class="overflow-x-auto">
         <table class="w-full">
@@ -64,10 +64,10 @@
         </table>
       </div>
     </x-card>
-  </section>
+  </section> --}}
 
-  <!-- Supervisor Status -->
-  <section>
+  {{-- supervisor status --}}
+  {{-- <section>
     <x-card>
       <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -98,5 +98,5 @@
         </div>
       </div>
     </x-card>
-  </section>
+  </section> --}}
 </div>

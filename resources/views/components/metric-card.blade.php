@@ -1,7 +1,3 @@
-<?php
-// resources/views/components/metric-card.blade.php
-?>
-
 @props([
     'title',
     'value',

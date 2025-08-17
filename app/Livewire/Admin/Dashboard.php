@@ -5,11 +5,8 @@ namespace App\Livewire\Admin;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-/**
- * Livewire component for the dashboard overview.
- */
-#[Layout('layouts.admin')]
-class DashboardOverview extends Component
+#[Layout('layouts.app')]
+class Dashboard extends Component
 {
     public $metrics = [
         'campaigns_per_minute' => 23,
@@ -39,6 +36,6 @@ class DashboardOverview extends Component
 
     public function render()
     {
-        return view('livewire.admin.dashboard-overview');
+        return view('livewire.admin.dashboard');
     }
 }
