@@ -17,8 +17,9 @@ COPY vite.config.js tailwind.config.js postcss.config.js ./
 COPY public ./public
 
 ARG VITE_APP_ENV=production
-ARG VITE_APP_URL
-ARG VITE_APP_NAME
+# Default application URLs for Vite build
+ARG VITE_APP_URL=https://localhost
+ARG VITE_APP_NAME="Cookies Manager CRM"
 
 RUN pnpm build && \
     # Handle both Vite 3 and 4 manifest locations
@@ -166,7 +167,7 @@ COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
 
 # Health check endpoint
-COPY docker/prod/healthcheck.php /var/www/html/public/health
+COPY docker/prod/healthcheck.php /var/www/html/public/healthcheck.php
 
 # Entrypoint
 COPY docker/prod/entrypoint.sh /usr/local/bin/entrypoint

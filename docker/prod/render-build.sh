@@ -1,3 +1,3 @@
 #!/bin/sh
 set -ex
-docker build -t $RENDER_SERVICE_NAME .
+docker build --target production -t $RENDER_SERVICE_NAME .

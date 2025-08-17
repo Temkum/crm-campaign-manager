@@ -6,6 +6,10 @@
 
 set -e
 
+# Workaround public image pull errors by clearing Docker credentials
+log_info "Resetting Docker registry credentials to avoid helper errors"
+docker logout registry-1.docker.io || true
+
 # Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -114,4 +118,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"

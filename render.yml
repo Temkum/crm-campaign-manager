@@ -4,7 +4,6 @@ services:
     runtime: docker
     env: docker
     buildCommand: ./docker/prod/render-build.sh
-    startCommand: /usr/local/bin/entrypoint
     healthCheckPath: /health
     envVars:
       - key: APP_ENV
@@ -19,6 +18,8 @@ services:
         fromDatabase:
           name: crm-pg
           property: password
+      - key: RUN_MIGRATIONS
+        value: "true"
     scaling:
       instances: 1
       memory: 2GB

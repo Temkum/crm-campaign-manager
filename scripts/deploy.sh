@@ -14,7 +14,18 @@ NC='\033[0m' # No Color
 
 # Configuration
 ENVIRONMENT=${1:-production}
-COMPOSE_FILE="docker-compose.${ENVIRONMENT}.yml"
+# Map environment name to compose file prefix
+case "${ENVIRONMENT}" in
+  production)
+    COMPOSE_FILE="docker-compose.prod.yml";;
+  staging)
+    COMPOSE_FILE="docker-compose.staging.yml";;
+  local)
+    COMPOSE_FILE="docker-compose.local.yml";;
+  *)
+    COMPOSE_FILE="docker-compose.${ENVIRONMENT}.yml";;
+esac
+
 BACKUP_DIR="./backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
@@ -69,6 +80,12 @@ create_backup() {
         log_info "Backup created: $BACKUP_DIR/db_backup_${ENVIRONMENT}_${TIMESTAMP}.sql"
     fi
 }
+
+# Log in to Docker Hub if credentials are provided
+if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_PASSWORD" ]; then
+    log_info "Logging in to Docker Hub"
+    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+fi
 
 deploy_application() {
     log_info "Starting deployment..."
@@ -129,18 +146,7 @@ optimize_application() {
 }
 
 health_check() {
-    log_info "Performing health check..."
-    
-    # Get the port from the compose file
-    PORT=$(docker-compose -f "$COMPOSE_FILE" port app 80 | cut -d: -f2)
-    
-    if [ -z "$PORT" ]; then
-        log_error "Could not determine application port!"
-        exit 1
-    fi
-    
-    # Wait for application to be ready
-    log_info "Waiting for application to be ready..."
+    log_info "Performing health check on http://localhost:$PORT/health..."
     for i in {1..30}; do
         if curl -f "http://localhost:$PORT/health" >/dev/null 2>&1; then
             log_info "Application is healthy and responding"
@@ -148,7 +154,6 @@ health_check() {
         fi
         sleep 2
     done
-    
     log_error "Application health check failed!"
     exit 1
 }
@@ -179,4 +184,4 @@ main() {
 trap 'log_error "Deployment interrupted!"; exit 1' INT TERM
 
 # Run main function
-main "$@" 
+main "$@"

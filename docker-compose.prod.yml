@@ -9,9 +9,6 @@ services:
         - APP_ENV=production
     container_name: crm_manager_app
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"  # Only if handling TLS termination directly
     volumes:
       - ./storage:/var/www/html/storage
       - ./bootstrap/cache:/var/www/html/bootstrap/cache
@@ -34,17 +31,6 @@ services:
       - ENV_SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD}
       - ENV_NUM_WORKERS=${QUEUE_WORKERS:-4}
       - ENV_ENABLE_HORIZON=${ENABLE_HORIZON:-false}
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 2G
-        reservations:
-          memory: 512M
-    secrets:
-      - db_password
-      - redis_password
-      - supervisor_password
     networks:
       - backend
       - frontend  # Separate network for public traffic
@@ -61,13 +47,11 @@ services:
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - pg_backups:/backups
-    secrets:
-      - db_password
     networks:
       - backend
     deploy:
