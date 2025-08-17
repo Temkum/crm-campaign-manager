@@ -104,7 +104,7 @@ class CampaignDeploymentService
                 'dom_selector' => $campaign->dom_selector ?: ($primaryWebsite?->dom_selector ?? null),
                 'custom_affiliate_url' => $primaryWebsite?->custom_affiliate_url ?? null,
                 'timer_offset' => $primaryWebsite?->timer_offset ?? $campaign->duration ?? null,
-                'trigers' => $this->transformTriggersForDeployment($campaign->campaignTriggers),
+                'triggers' => $this->transformTriggersForDeployment($campaign->campaignTriggers),
             ];
         })->toArray();
     }
@@ -143,7 +143,7 @@ class CampaignDeploymentService
                 'custom_affiliate_url' => $websiteConfig?->custom_affiliate_url ?? null,
                 'timer_offset' => $websiteConfig?->timer_offset ?? $campaign->duration ?? null,
                 'website_id' => $websiteConfig?->website_id ?? null,
-                'trigers' => $this->transformTriggersForDeployment($campaign->campaignTriggers),
+                'triggers' => $this->transformTriggersForDeployment($campaign->campaignTriggers),
             ];
         })->toArray();
     }

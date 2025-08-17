@@ -70,6 +70,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/operators/create', AddOperator::class)->name('operators.create');
         Route::get('/operators/{operator}/edit', EditOperator::class)->name('operators.edit');
     });
+
+    Route::get('/health', function () {
+        return response()->json(['status' => 'ok']);
+    });
 });
 
 require __DIR__ . '/auth.php';
+
+// Fallback route for unmatched URIs -> show custom 404 page
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});

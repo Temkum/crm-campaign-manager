@@ -34,7 +34,17 @@ class CampaignDeploymentManager extends Component
 
     public function loadDeploymentStats()
     {
-        $this->deploymentStats = $this->deploymentExecutor->getDeploymentStats();
+        try {
+            $this->deploymentStats = $this->deploymentExecutor->getDeploymentStats();
+        } catch (\Throwable $e) {
+            $this->deploymentStats = [
+                'today_deployments' => 0,
+                'pending_queue_jobs' => 0,
+                'recent_failures' => 0,
+                'active_campaigns' => 0,
+            ];
+            session()->flash('error', 'Could not load deployment stats.');
+        }
     }
 
     /**
@@ -50,9 +60,9 @@ class CampaignDeploymentManager extends Component
             $this->lastDeploymentResult = $result;
 
             if ($result['success']) {
-                session()->flash('success', $result['message']);
+                session()->flash('success', $result['message'] ?? 'Deployment queued.');
             } else {
-                session()->flash('error', $result['message']);
+                session()->flash('error', $result['message'] ?? 'Deployment failed.');
             }
         } catch (\Exception $e) {
             session()->flash('error', 'Deployment failed: ' . $e->getMessage());
@@ -80,10 +90,11 @@ class CampaignDeploymentManager extends Component
             $this->lastDeploymentResult = $result;
 
             if ($result['success']) {
-                session()->flash('success', $result['message']);
+                session()->flash('success', $result['message'] ?? 'Deployment queued.');
                 $this->selectedCampaigns = []; // Clear selection
+                $this->selectAll = false;
             } else {
-                session()->flash('error', $result['message']);
+                session()->flash('error', $result['message'] ?? 'Deployment failed.');
             }
         } catch (\Exception $e) {
             session()->flash('error', 'Deployment failed: ' . $e->getMessage());
@@ -103,16 +114,20 @@ class CampaignDeploymentManager extends Component
             return;
         }
 
-        $validation = $this->deploymentService->validateCampaignsForDeployment($this->selectedCampaigns);
+        try {
+            $validation = $this->deploymentService->validateCampaignsForDeployment($this->selectedCampaigns);
 
-        if ($validation['invalid_count'] > 0) {
-            $errorMessage = "Validation failed for {$validation['invalid_count']} campaigns. Check campaign configuration.";
-            session()->flash('error', $errorMessage);
-        } else {
-            session()->flash('success', "All {$validation['valid_count']} selected campaigns passed validation!");
+            if (($validation['invalid_count'] ?? 0) > 0) {
+                $errorMessage = "Validation failed for " . ($validation['invalid_count'] ?? 0) . " campaigns. Check campaign configuration.";
+                session()->flash('error', $errorMessage);
+            } else {
+                session()->flash('success', "All " . ($validation['valid_count'] ?? 0) . " selected campaigns passed validation!");
+            }
+
+            $this->lastDeploymentResult = $validation;
+        } catch (\Throwable $e) {
+            session()->flash('error', 'Validation failed: ' . $e->getMessage());
         }
-
-        $this->lastDeploymentResult = $validation;
     }
 
     public $deployments = [];
@@ -122,15 +137,42 @@ class CampaignDeploymentManager extends Component
      */
     public function redeploy($deploymentId)
     {
-        $deployment = \App\Models\CampaignDeployment::find($deploymentId);
-        if ($deployment) {
-            // Trigger redeployment logic (reuse deploySelected or custom logic)
-            // For now, just dispatch the job again
-            \App\Jobs\DeployCampaignToWebsiteJob::dispatch($deployment->campaign_id, $deployment->campaign->campaignWebsites->first()->website_id ?? null);
+        try {
+            $deployment = \App\Models\CampaignDeployment::with('campaign.campaignWebsites')
+                ->find($deploymentId);
+
+            if (!$deployment || !$deployment->campaign) {
+                session()->flash('error', 'Deployment not found.');
+                return;
+            }
+
+            $campaignModel = $deployment->campaign;
+            // Prefer website_id from previous deployment metadata; fallback to first configured website
+            $websiteId = data_get($deployment->metadata, 'context.website_id')
+                ?? optional($campaignModel->campaignWebsites->first())->website_id;
+
+            if (!$websiteId) {
+                session()->flash('error', 'No target website found for redeploy.');
+                return;
+            }
+
+            // Build website-specific campaign payload via service
+            $prepared = $this->deploymentService->prepareCampaignsForWebsiteDeployment($websiteId);
+            $campaignPayload = collect($prepared)->firstWhere('id', $campaignModel->id) ?? [
+                'id' => $campaignModel->id,
+                'name' => $campaignModel->name,
+                'status' => $campaignModel->status,
+                'priority' => $campaignModel->priority,
+                'start_at' => optional($campaignModel->start_at)->toISOString(),
+                'end_at' => optional($campaignModel->end_at)->toISOString(),
+            ];
+
+            \App\Jobs\DeployCampaignToWebsiteJob::dispatch($campaignPayload, (int) $websiteId);
             session()->flash('success', 'Redeployment triggered.');
-        } else {
-            session()->flash('error', 'Deployment not found.');
+        } catch (\Throwable $e) {
+            session()->flash('error', 'Redeploy failed: ' . $e->getMessage());
         }
+
         $this->loadDeployments();
     }
 
@@ -139,21 +181,60 @@ class CampaignDeploymentManager extends Component
      */
     public function loadDeployments()
     {
-        $this->deployments =
-            \App\Models\CampaignDeployment::with('campaign')
-            ->orderByDesc('deployed_at')
-            ->limit(20)
-            ->get();
+        try {
+            $this->deployments =
+                \App\Models\CampaignDeployment::with('campaign')
+                ->orderByDesc('deployed_at')
+                ->limit(20)
+                ->get();
+        } catch (\Throwable $e) {
+            $this->deployments = collect();
+            session()->flash('error', 'Could not load recent deployments.');
+        }
+    }
+
+    /**
+     * Toggle select all campaigns in the table.
+     */
+    public function updatedSelectAll($value)
+    {
+        try {
+            if ($value) {
+                $this->selectedCampaigns = Campaign::whereIn('status', ['active', 'scheduled', 'disabled'])
+                    ->orderBy('priority', 'desc')
+                    ->pluck('id')
+                    ->toArray();
+            } else {
+                $this->selectedCampaigns = [];
+            }
+        } catch (\Throwable $e) {
+            $this->selectedCampaigns = [];
+            $this->selectAll = false;
+            session()->flash('error', 'Could not update selection.');
+        }
     }
 
     public function render()
     {
-        $deployableCampaigns = $this->deploymentService->prepareCampaignsForDeployment();
-        $allCampaigns = Campaign::with(['campaignWebsites', 'campaignTriggers'])
-            ->whereIn('status', ['active', 'scheduled', 'disabled'])
-            ->orderBy('priority', 'desc')
-            ->get();
+        try {
+            $deployableCampaigns = $this->deploymentService->prepareCampaignsForDeployment();
+        } catch (\Throwable $e) {
+            $deployableCampaigns = [];
+            session()->flash('error', 'Failed to prepare deployable campaigns.');
+        }
+
+        try {
+            $allCampaigns = Campaign::with(['campaignWebsites', 'campaignTriggers'])
+                ->whereIn('status', ['active', 'scheduled', 'disabled'])
+                ->orderBy('priority', 'desc')
+                ->get();
+        } catch (\Throwable $e) {
+            $allCampaigns = collect();
+            session()->flash('error', 'Failed to load campaigns.');
+        }
+
         $this->loadDeployments();
+
         return view('livewire.admin.campaigns.campaign-deployment-manager', [
             'deployableCampaigns' => $deployableCampaigns,
             'allCampaigns' => $allCampaigns,

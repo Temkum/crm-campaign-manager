@@ -744,17 +744,44 @@ class CampaignDeploymentExecutorService
      */
     public function getDeploymentStats(): array
     {
-        $today = now()->startOfDay();
+        try {
+            $today = now()->startOfDay();
 
-        return [
-            'today_deployments' => CampaignDeployment::where('deployed_at', '>=', $today)->count(),
-            'pending_queue_jobs' => Queue::size('campaign-deployment'),
-            'recent_failures' => CampaignDeployment::where('status', 'failed')
-                ->where('deployed_at', '>=', now()->subHours(24))
-                ->count(),
-            'active_campaigns' => Campaign::where('status', 'active')->count(),
-        ];
+            return [
+                'today_deployments' => CampaignDeployment::where('deployed_at', '>=', $today)->count(),
+                'pending_queue_jobs' => $this->safeQueueSize('campaign-deployment'),
+                'recent_failures' => CampaignDeployment::where('status', 'failed')
+                    ->where('deployed_at', '>=', now()->subHours(24))
+                    ->count(),
+                'active_campaigns' => Campaign::where('status', 'active')->count(),
+            ];
+        } catch (\Throwable $e) {
+            // In production, avoid breaking the page if queue/DB is unavailable
+            Log::warning('Failed to load deployment stats, returning defaults', [
+                'error' => $e->getMessage(),
+            ]);
+            return [
+                'today_deployments' => 0,
+                'pending_queue_jobs' => 0,
+                'recent_failures' => 0,
+                'active_campaigns' => 0,
+            ];
+        }
     }
+
+    private function safeQueueSize(string $queue): int
+    {
+        try {
+            return Queue::size($queue);
+        } catch (\Throwable $e) {
+            Log::notice('Queue size check failed, defaulting to 0', [
+                'queue' => $queue,
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
+    }
+
     /**
      * Remove campaign from all websites (for campaign deactivation)
      */

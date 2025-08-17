@@ -22,3 +22,11 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.env.*
+.env.prod
+.env.testing
+.env.local
+/.vscode/settings.json
+/.vscode/tasks.json
+/.vscode/launch.json
+Todo.md
