@@ -81,10 +81,37 @@ create_backup() {
     fi
 }
 
-# Log in to Docker Hub if credentials are provided
+# Secure Docker Hub login using credential files (preferred) or env as fallback
+DOCKERHUB_USERNAME_FILE="./.dockerhub_username"
+DOCKERHUB_PASSWORD_FILE="./.dockerhub_password"
+
+DOCKERHUB_USER_FROM_FILES=""
+DOCKERHUB_PASS_FROM_FILES=""
+
+if [ -f "$DOCKERHUB_USERNAME_FILE" ] && [ -f "$DOCKERHUB_PASSWORD_FILE" ]; then
+    # Check file permissions (should be 600)
+    USER_PERM=$(stat -c %a "$DOCKERHUB_USERNAME_FILE" 2>/dev/null || echo 600)
+    PASS_PERM=$(stat -c %a "$DOCKERHUB_PASSWORD_FILE" 2>/dev/null || echo 600)
+    if [ "$USER_PERM" -gt 600 ] || [ "$PASS_PERM" -gt 600 ]; then
+        log_warn "Docker Hub credential files should have permissions 600 (rw-------)."
+    fi
+    DOCKERHUB_USER_FROM_FILES=$(cat "$DOCKERHUB_USERNAME_FILE")
+    DOCKERHUB_PASS_FROM_FILES=$(cat "$DOCKERHUB_PASSWORD_FILE")
+fi
+
+# Resolve credentials: prefer files; otherwise fallback to env (warn)
+if [ -n "$DOCKERHUB_USER_FROM_FILES" ] && [ -n "$DOCKERHUB_PASS_FROM_FILES" ]; then
+    DOCKERHUB_USERNAME="$DOCKERHUB_USER_FROM_FILES"
+    DOCKERHUB_PASSWORD="$DOCKERHUB_PASS_FROM_FILES"
+elif [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_PASSWORD" ]; then
+    log_warn "Using Docker Hub credentials from environment variables; consider using credential files for better security."
+fi
+
 if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_PASSWORD" ]; then
     log_info "Logging in to Docker Hub"
-    echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    printf '%s' "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    # Clear sensitive variables from memory
+    unset DOCKERHUB_PASSWORD DOCKERHUB_PASS_FROM_FILES
 fi
 
 deploy_application() {
