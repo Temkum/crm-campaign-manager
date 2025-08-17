@@ -98,7 +98,7 @@ Get all deployable campaigns
             "dom_selector": "ozj,d",
             "custom_affiliate_url": "https://google.fr",
             "timer_offset": 1,
-            "trigers": [
+            "triggers": [
                 {
                     "id": 9,
                     "type": "browser",
@@ -186,7 +186,7 @@ Each campaign is transformed into this standardized format:
     "dom_selector": "css-selector",
     "custom_affiliate_url": "https://example.com",
     "timer_offset": 1,
-    "trigers": [
+    "triggers": [
         {
             "id": 9,
             "type": "browser",
