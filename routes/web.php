@@ -75,3 +75,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+// Fallback route for unmatched URIs -> show custom 404 page
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});
