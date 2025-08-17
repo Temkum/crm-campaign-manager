@@ -146,14 +146,42 @@ optimize_application() {
 }
 
 health_check() {
-    log_info "Performing health check on http://localhost:$PORT/health..."
-    for i in {1..30}; do
-        if curl -f "http://localhost:$PORT/health" >/dev/null 2>&1; then
-            log_info "Application is healthy and responding"
-            return 0
-        fi
-        sleep 2
-    done
+    log_info "Performing health check..."
+
+    case "$ENVIRONMENT" in
+      production)
+        # No host port mapping; check from inside the app container
+        for i in {1..30}; do
+            if docker-compose -f "$COMPOSE_FILE" exec -T app curl -sf http://localhost/health >/dev/null 2>&1; then
+                log_info "Application is healthy and responding (in-container)"
+                return 0
+            fi
+            sleep 2
+        done
+        ;;
+      staging)
+        PORT=8001
+        ;;
+      local)
+        PORT=8000
+        ;;
+      *)
+        # Try to discover host-mapped port
+        PORT=$(docker-compose -f "$COMPOSE_FILE" port app 80 | awk -F: '{print $2}')
+        ;;
+    esac
+
+    if [ -n "$PORT" ]; then
+        log_info "Checking http://localhost:$PORT/health"
+        for i in {1..30}; do
+            if curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1; then
+                log_info "Application is healthy and responding (host)"
+                return 0
+            fi
+            sleep 2
+        done
+    fi
+
     log_error "Application health check failed!"
     exit 1
 }

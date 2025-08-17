@@ -35,9 +35,9 @@ services:
       - SESSION_DRIVER=redis
       - CACHE_DRIVER=redis
       - LOG_LEVEL=debug
-      - ENV_SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD:-staging_password}
-      - ENV_NUM_WORKERS=${QUEUE_WORKERS:-2}
-      - ENV_ENABLE_HORIZON=${ENABLE_HORIZON:-false}
+      - SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD:-staging_password}
+      - NUM_WORKERS=${QUEUE_WORKERS:-2}
+      - ENABLE_HORIZON=${ENABLE_HORIZON:-false}
     depends_on:
       pgsql:
         condition: service_healthy
@@ -101,4 +101,4 @@ volumes:
 
 networks:
   staging_network:
-    driver: bridge 
+    driver: bridge

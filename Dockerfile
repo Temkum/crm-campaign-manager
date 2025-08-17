@@ -177,7 +177,9 @@ RUN chmod +x /usr/local/bin/entrypoint
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
-    OPACHE_ENABLE=1
+    OPACHE_ENABLE=1 \
+    NUM_WORKERS=2 \
+    ENABLE_HORIZON=false
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost/health || exit 1

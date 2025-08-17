@@ -28,9 +28,9 @@ services:
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
       - CACHE_DRIVER=redis
-      - ENV_SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD}
-      - ENV_NUM_WORKERS=${QUEUE_WORKERS:-4}
-      - ENV_ENABLE_HORIZON=${ENABLE_HORIZON:-false}
+      - SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD}
+      - NUM_WORKERS=${QUEUE_WORKERS:-4}
+      - ENABLE_HORIZON=${ENABLE_HORIZON:-false}
     networks:
       - backend
       - frontend  # Separate network for public traffic
