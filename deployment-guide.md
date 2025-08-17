@@ -203,24 +203,24 @@ Each campaign is transformed into this standardized format:
 
 Campaigns are considered deployable if they:
 
--   Have status `active` or `scheduled`
--   Start date is today or in the past
--   End date is in the future
--   Have at least one trigger configured
--   Have at least one website configured
+- Have status `active` or `scheduled`
+- Start date is today or in the past
+- End date is in the future
+- Have at least one trigger configured
+- Have at least one website configured
 
 ### **Priority Handling**
 
--   Campaigns are ordered by priority (descending) then start date (ascending)
--   Website-specific configurations override campaign defaults
--   Highest priority website configuration is used when multiple websites exist
+- Campaigns are ordered by priority (descending) then start date (ascending)
+- Website-specific configurations override campaign defaults
+- Highest priority website configuration is used when multiple websites exist
 
 ### **Data Sources**
 
--   `dom_selector`: Website-specific > Campaign default
--   `custom_affiliate_url`: Website-specific only
--   `timer_offset`: Website-specific > Campaign duration
--   `priority`: Website-specific > Campaign priority
+- `dom_selector`: Website-specific > Campaign default
+- `custom_affiliate_url`: Website-specific only
+- `timer_offset`: Website-specific > Campaign duration
+- `priority`: Website-specific > Campaign priority
 
 ## Advanced Usage
 
@@ -271,9 +271,9 @@ Http::post("https://website.com/api/campaigns", [
 
 The service includes comprehensive validation:
 
--   Missing triggers or websites
--   Invalid date ranges
--   Expired campaigns
--   Malformed data
+- Missing triggers or websites
+- Invalid date ranges
+- Expired campaigns
+- Malformed data
 
 Always check validation results before proceeding with deployment!
