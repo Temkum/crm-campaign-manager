@@ -6,6 +6,14 @@
     display: none !important;
 }
 
+@layer base {
+    html {
+        font-family: "Google Sans Code", "Quicksand", sans-serif;
+        font-optical-sizing: auto;
+        font-style: normal;
+    }
+}
+
 @layer components {
     .btn-primary {
         @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;

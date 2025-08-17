@@ -8,8 +8,11 @@
 
   <title>{{ config('app.name', 'Campaign Manager') }}</title>
 
-  <link rel="preconnect" href="https://fonts.bunny.net">
-  <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300..700&display=swap"
+    rel="stylesheet">
 
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @livewireStyles
@@ -18,7 +21,6 @@
 <body x-cloak x-data="{ darkMode: $persist(false), sidebarOpen: false }" :class="{ 'dark': darkMode === true }"
   class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased">
 
-  {{-- Mobile backdrop --}}
   <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
     x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
