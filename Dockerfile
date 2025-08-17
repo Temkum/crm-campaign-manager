@@ -65,7 +65,8 @@ RUN apk add --no-cache \
     oniguruma \
     libpng \
     libxml2 \
-    libstdc++
+    libstdc++ \
+    curl
 
 # Install PHP extensions
 RUN docker-php-ext-install \
@@ -165,6 +166,9 @@ COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Configure nginx
 COPY docker/prod/nginx.conf /etc/nginx/nginx.conf
 COPY docker/prod/nginx-site.conf /etc/nginx/sites-available/default
+# Ensure sites-enabled exists and enable default site
+RUN mkdir -p /etc/nginx/sites-enabled && \
+    ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Health check endpoint
 COPY docker/prod/healthcheck.php /var/www/html/public/healthcheck.php
@@ -179,11 +183,14 @@ ENV APP_ENV=production \
     LOG_CHANNEL=stderr \
     OPACHE_ENABLE=1 \
     NUM_WORKERS=2 \
-    ENABLE_HORIZON=false
+    ENABLE_HORIZON=false \
+    DISABLE_HTTPS_REDIRECT=true
 
+# Healthcheck respects dynamic PORT (default 80)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD sh -c 'curl -sf http://127.0.0.1:${PORT:-80}/health || curl -sf http://localhost:${PORT:-80}/health || exit 1'
 
+# Document container port; Render sets PORT dynamically, so this is informational
 EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
