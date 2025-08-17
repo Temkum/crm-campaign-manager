@@ -80,11 +80,11 @@ public function deploySelected()
 
 **UI Features:**
 
--   Deploy selected campaigns
--   Deploy all ready campaigns
--   Validate before deployment
--   Real-time deployment stats
--   Loading states and progress
+- Deploy selected campaigns
+- Deploy all ready campaigns
+- Validate before deployment
+- Real-time deployment stats
+- Loading states and progress
 
 ### **2. Automated Deployment (Cron Jobs)**
 
@@ -106,10 +106,10 @@ php artisan campaigns:deploy --sync
 
 **Automatic Schedule:**
 
--   Runs every 5 minutes
--   Only deploys campaigns that are ready
--   Prevents duplicate deployments
--   Comprehensive logging
+- Runs every 5 minutes
+- Only deploys campaigns that are ready
+- Prevents duplicate deployments
+- Comprehensive logging
 
 ### **3. Queue-Based Processing**
 
@@ -125,11 +125,11 @@ DeployCampaignToWebsiteJob::dispatch($campaignData, $websiteId);
 
 **Queue Features:**
 
--   Async processing
--   Retry failed deployments (3 attempts)
--   Backoff delays
--   Comprehensive error handling
--   Job status tracking
+- Async processing
+- Retry failed deployments (3 attempts)
+- Backoff delays
+- Comprehensive error handling
+- Job status tracking
 
 ### **4. API Endpoints**
 
@@ -169,7 +169,7 @@ POST https://website.com/api/campaigns
   "campaign": {
     "id": 5,
     "name": "Campaign 5",
-    "trigers": [...],
+    "triggers": [...],
     // ... full campaign data
   }
 }
@@ -197,11 +197,11 @@ POST https://website.com/webhook
 
 ### **Deployment Dashboard**
 
--   Real-time deployment statistics
--   Campaign selection and bulk actions
--   Validation before deployment
--   Manual deployment triggers
--   Queue job monitoring
+- Real-time deployment statistics
+- Campaign selection and bulk actions
+- Validation before deployment
+- Manual deployment triggers
+- Queue job monitoring
 
 ### **Logging & Tracking**
 
@@ -215,11 +215,11 @@ POST https://website.com/webhook
 
 ### **Error Handling**
 
--   Validation before deployment
--   Retry mechanism for failures
--   Detailed error logging
--   Partial deployment support
--   Admin notifications
+- Validation before deployment
+- Retry mechanism for failures
+- Detailed error logging
+- Partial deployment support
+- Admin notifications
 
 ## **Configuration Options**
 
@@ -235,11 +235,11 @@ POST https://website.com/webhook
 
 ### **Campaign Validation Rules**
 
--   Has triggers configured
--   Has websites assigned
--   Valid date ranges
--   Campaign hasn't ended
--   Required fields present
+- Has triggers configured
+- Has websites assigned
+- Valid date ranges
+- Campaign hasn't ended
+- Required fields present
 
 ## **Recommended Production Setup**
 
@@ -278,26 +278,26 @@ $useQueue = false;
 
 ## **Testing Checklist**
 
--   [ ] Manual deployment works from UI
--   [ ] Automatic deployment runs via cron
--   [ ] Queue jobs process correctly
--   [ ] API endpoints respond properly
--   [ ] Validation catches invalid campaigns
--   [ ] Error handling works for failed deployments
--   [ ] Logging captures all deployment attempts
--   [ ] Website-specific configurations work
--   [ ] Retry mechanism functions on failures
--   [ ] Dashboard shows accurate statistics
+- [ ] Manual deployment works from UI
+- [ ] Automatic deployment runs via cron
+- [ ] Queue jobs process correctly
+- [ ] API endpoints respond properly
+- [ ] Validation catches invalid campaigns
+- [ ] Error handling works for failed deployments
+- [ ] Logging captures all deployment attempts
+- [ ] Website-specific configurations work
+- [ ] Retry mechanism functions on failures
+- [ ] Dashboard shows accurate statistics
 
 ## **Result**
 
 You now have a **complete, production-ready campaign deployment system** that can:
 
--   Deploy campaigns via buttons, cron jobs, queues, or APIs
--   Handle high-volume deployments asynchronously
--   Validate campaigns before deployment
--   Support multiple deployment targets (API/webhook/file)
--   Provide comprehensive monitoring and error handling
--   Scale from small to enterprise-level usage
+- Deploy campaigns via buttons, cron jobs, queues, or APIs
+- Handle high-volume deployments asynchronously
+- Validate campaigns before deployment
+- Support multiple deployment targets (API/webhook/file)
+- Provide comprehensive monitoring and error handling
+- Scale from small to enterprise-level usage
 
 Choose the deployment method that best fits your needs, or use multiple methods together!

@@ -5,105 +5,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>CampaignCompanion</title>
+  <title>{{ config('app.name', 'Campaign Companion') }}</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'gradient': 'gradient 8s linear infinite',
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'slide-up': 'slideUp 0.8s ease-out',
-            'fade-in': 'fadeIn 1s ease-out',
-            'bounce-slow': 'bounce 3s infinite',
-          },
-          keyframes: {
-            gradient: {
-              '0%, 100%': {
-                'background-size': '200% 200%',
-                'background-position': 'left center'
-              },
-              '50%': {
-                'background-size': '200% 200%',
-                'background-position': 'right center'
-              }
-            },
-            float: {
-              '0%, 100%': {
-                transform: 'translateY(0px)'
-              },
-              '50%': {
-                transform: 'translateY(-20px)'
-              }
-            },
-            slideUp: {
-              '0%': {
-                transform: 'translateY(50px)',
-                opacity: '0'
-              },
-              '100%': {
-                transform: 'translateY(0)',
-                opacity: '1'
-              }
-            },
-            fadeIn: {
-              '0%': {
-                opacity: '0'
-              },
-              '100%': {
-                opacity: '1'
-              }
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    . {
-      /* Gradient removed */
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    . {
-      /* /* Gradient removed */
-      */ background-size: 200% 200%;
-      animation: gradient 8s ease infinite;
-    }
-
-    .card-hover {
-      transition: all 0.3s ease;
-    }
-
-    .card-hover:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-
-    . {
-      /* /* Gradient removed */
-      */ -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-  </style>
-
   <!-- Styles -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @livewireStyles
 </head>
 
 <body class="bg-gray-900 text-white overflow-x-hidden">
@@ -113,7 +23,7 @@
       <div class="flex justify-between items-center py-4">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-lg flex items-center justify-center">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-full h-full object-contain">
+            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo" class="w-full h-full object-contain">
           </div>
           <span class="text-xl font-bold">CampaignCompanion</span>
         </div>
@@ -124,14 +34,14 @@
         </div> --}}
         <div class="flex space-x-4">
           @auth
-            <a href="/dashboard"
-              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
+          <a href="{{ route('dashboard') }}"
+            class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
           @else
-            <a href="http://localhost:8000/login"
-              class="px-6 py-2 text-purple-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
-            <a href="/register"
-              class="px-6 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
-              Started</a>
+          <a href="{{ route('login') }}"
+            class="px-6 py-2 text-cyan-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
+          <a href="{{ route('register') }}"
+            class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
+            Started</a>
           @endauth
         </div>
       </div>
@@ -140,12 +50,12 @@
 
   <!-- Hero Section -->
   <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
-    <div class="absolute inset-0 bg-purple-900 opacity-10"></div>
+    <div class="absolute inset-0 bg-cyan-900 opacity-10"></div>
 
     <!-- Animated Background Elements -->
     <div class="absolute inset-0 overflow-hidden">
       <div
-        class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
+        class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float">
       </div>
       <div
         class="absolute top-3/4 right-1/4 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"
@@ -167,7 +77,7 @@
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <button
-            class="px-8 py-4 bg-purple-700 hover:bg-purple-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
+            class="px-8 py-4 bg-cyan-700 hover:bg-cyan-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
             Start Free Trial
           </button>
           <button
@@ -184,15 +94,15 @@
       <!-- Stats -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 animate-fade-in" style="animation-delay: 0.5s;">
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-purple-400 mb-2">10K+</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">10K+</div>
           <div class="text-gray-400">Active Campaigns</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-indigo-400 mb-2">500+</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">500+</div>
           <div class="text-gray-400">Happy Clients</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-pink-400 mb-2">99.9%</div>
+          <div class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2">99.9%</div>
           <div class="text-gray-400">Uptime</div>
         </div>
         <div class="text-center">
@@ -219,7 +129,7 @@
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <!-- Feature 1 -->
         <div class="glass-effect rounded-2xl p-8 card-hover">
-          <div class="w-16 h-16 bg-purple-700 rounded-xl flex items-center justify-center mb-6">
+          <div class="w-16 h-16 bg-cyan-700 rounded-xl flex items-center justify-center mb-6">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
               </path>
@@ -247,7 +157,7 @@
 
         <!-- Feature 3 -->
         <div class="glass-effect rounded-2xl p-8 card-hover">
-          <div class="w-16 h-16 bg-purple-700 rounded-xl flex items-center justify-center mb-6">
+          <div class="w-16 h-16 bg-cyan-700 rounded-xl flex items-center justify-center mb-6">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4">
@@ -308,7 +218,7 @@
 
   <!-- CTA Section -->
   <section class="py-20 relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-cyan-600 to-indigo-600 opacity-10"></div>
     <div class="max-w-4xl mx-auto text-center px-6 sm:px-8 relative z-10">
       <h2 class="text-4xl md:text-5xl font-bold mb-6">
         Ready to Transform Your
@@ -321,7 +231,7 @@
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <button
-          class="px-8 py-4 bg-purple-700 hover:bg-purple-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
+          class="px-8 py-4 bg-cyan-700 hover:bg-cyan-600 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl">
           Start Your Free Trial
         </button>
         <button
@@ -337,11 +247,8 @@
     <div class="max-w-7xl mx-auto px-6 sm:px-8">
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="flex items-center space-x-3 mb-4 md:mb-0">
-          <div class="w-8 h-8 rounded-lg bg-purple-700 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
-              </path>
-            </svg>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center">
+            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo" class="w-full h-full object-contain">
           </div>
           <span class="text-lg font-bold">CampaignCompanion</span>
         </div>
@@ -352,6 +259,7 @@
     </div>
   </footer>
 
+  @livewireScripts
   <script>
     // Add smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {

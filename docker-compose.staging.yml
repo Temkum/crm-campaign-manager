@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: production
+      args:
+        - APP_ENV=staging
+        - VITE_APP_ENV=staging
+    container_name: crm_manager_app_staging
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+      - ./docker/staging/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - php_sessions:/tmp/php_sessions
+    environment:
+      - APP_ENV=staging
+      - APP_DEBUG=false
+      - APP_URL=http://localhost:8001
+      - DB_CONNECTION=pgsql
+      - DB_HOST=pgsql
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_NAME:-laravel_staging}
+      - DB_USERNAME=${DB_USER:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - CACHE_DRIVER=redis
+      - LOG_LEVEL=debug
+      - SUPERVISOR_PASSWORD=${SUPERVISOR_PASSWORD:-staging_password}
+      - NUM_WORKERS=${QUEUE_WORKERS:-2}
+      - ENABLE_HORIZON=${ENABLE_HORIZON:-false}
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - staging_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pgsql:
+    image: postgres:15-alpine
+    container_name: crm_manager_db_staging
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-laravel_staging}
+      - POSTGRES_USER=${DB_USER:-laravel}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+      - pg_backups_staging:/backups
+    networks:
+      - staging_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-laravel} -d ${DB_NAME:-laravel_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: crm_manager_redis_staging
+    restart: unless-stopped
+    command: >
+      redis-server 
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    volumes:
+      - redis_data_staging:/data
+    networks:
+      - staging_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data_staging:
+    driver: local
+  redis_data_staging:
+    driver: local
+  php_sessions:
+    driver: local
+  pg_backups_staging:
+    driver: local
+
+networks:
+  staging_network:
+    driver: bridge

@@ -1,0 +1,59 @@
+# Version control
+.git
+.gitignore
+
+# Laravel specific
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# Laravel runtime/cache
+storage/*.key
+storage/logs
+storage/framework
+bootstrap/cache
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git
+.gitignore
+README.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+!docker/
+
+# Testing
+/tests
+/phpunit.xml
+/.phpunit.cache
+
+# Development
+/public/build/manifest.json

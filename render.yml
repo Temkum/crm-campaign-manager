@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: crm-manager
+    runtime: docker
+    env: docker
+    buildCommand: ./docker/prod/render-build.sh
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: crm-pg
+          property: host
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: crm-pg
+          property: password
+      - key: RUN_MIGRATIONS
+        value: "true"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DISABLE_HTTPS_REDIRECT
+        value: "true"
+    scaling:
+      instances: 1
+      memory: 2GB
+      cpu: 1
+
+databases:
+  - name: crm-pg
+    plan: free
+    databaseName: crm_production
+    user: crm_user
