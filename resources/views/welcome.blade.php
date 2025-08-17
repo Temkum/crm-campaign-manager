@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>CampaignCompanion</title>
+  <title>{{ config('app.name', 'Campaign Companion') }}</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
@@ -34,14 +34,14 @@
         </div> --}}
         <div class="flex space-x-4">
           @auth
-            <a href="/dashboard"
-              class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
+          <a href="{{ route('dashboard') }}"
+            class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Dashboard</a>
           @else
-            <a href="http://localhost:8000/login"
-              class="px-6 py-2 text-cyan-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
-            <a href="/register"
-              class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
-              Started</a>
+          <a href="{{ route('login') }}"
+            class="px-6 py-2 text-cyan-400 hover:text-white rounded-lg transition-all duration-300 transform hover:scale-105">Login</a>
+          <a href="{{ route('register') }}"
+            class="px-6 py-2 bg-cyan-700 hover:bg-cyan-600 rounded-lg transition-all duration-300 transform hover:scale-105">Get
+            Started</a>
           @endauth
         </div>
       </div>
@@ -248,8 +248,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="flex items-center space-x-3 mb-4 md:mb-0">
           <div class="w-8 h-8 rounded-lg flex items-center justify-center">
-            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo"
-              class="w-full h-full object-contain">
+            <img src="{{ asset('assets/images/logo-white.png') }}" alt="Logo" class="w-full h-full object-contain">
           </div>
           <span class="text-lg font-bold">CampaignCompanion</span>
         </div>
