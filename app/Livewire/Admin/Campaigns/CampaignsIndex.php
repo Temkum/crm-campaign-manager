@@ -15,7 +15,7 @@ class CampaignsIndex extends Component
     {
         $campaigns = Campaign::where('name', 'like', '%' . $this->search . '%')
             ->orderByDesc('updated_at')
-            ->paginate(15);
+            ->paginate(10);
         return view('livewire.admin.campaigns.campaigns-index', [
             'campaigns' => $campaigns,
         ]);

@@ -19,7 +19,7 @@
 </head>
 
 <body x-cloak x-data="{ darkMode: $persist(false), sidebarOpen: false }" :class="{ 'dark': darkMode === true }"
-  class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased">
+  class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-400 transition-colors duration-200 antialiased">
 
   <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -33,7 +33,7 @@
   <div class="lg:ml-64 min-h-screen">
     <livewire:layout.header />
 
-    <main class="p-6">
+    <main class="p-6 bg-gray-50 dark:bg-gray-800 dark:text-gray-300 text-gray-800 min-h-screen">
       {{ $slot }}
     </main>
   </div>

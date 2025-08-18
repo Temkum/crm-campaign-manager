@@ -1,0 +1,27 @@
+.pagination-wrapper .pagination {
+    @apply flex items-center space-x-1;
+}
+
+.pagination-wrapper .page-link {
+    @apply relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 dark: text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150;
+}
+
+.pagination-wrapper .page-link:first-child {
+    @apply rounded-l-md;
+}
+
+.pagination-wrapper .page-link:last-child {
+    @apply rounded-r-md;
+}
+
+.pagination-wrapper .page-item.active .page-link {
+    @apply z-10 bg-blue-50 dark: bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300;
+}
+
+.pagination-wrapper .page-item.disabled .page-link {
+    @apply text-gray-300 dark: text-gray-600 cursor-not-allowed;
+}
+
+.pagination-wrapper .page-link:hover {
+    @apply bg-gray-50 dark:bg-gray-700;
+}

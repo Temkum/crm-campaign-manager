@@ -2,11 +2,11 @@
   {{-- overview section --}}
   <section class="mb-8">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold">Overview</h2>
+      <h2 class="text-2xl font-bold">{{ __('Overview') }}</h2>
       <div class="flex items-center space-x-2">
         <div class="flex items-center space-x-2 text-sm">
           <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span class="text-green-600 dark:text-green-400 font-medium">Active</span>
+          <span class="text-green-600 dark:text-green-400 font-medium">{{ __('Active') }}</span>
         </div>
       </div>
     </div>
