@@ -24,90 +24,37 @@
         @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors;
     }
 
-    /* Fix for dropdown positioning issues */
-    .campaign-form {
-        position: relative;
-        z-index: 1;
+    .primary-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors;
     }
 
-    .campaign-form select {
-        position: relative;
-        /* Remove z-index to avoid stacking conflicts; browser handles dropdown z-index */
-        appearance: menulist;
-        -webkit-appearance: menulist;
-        -moz-appearance: menulist;
+    .secondary-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors;
     }
 
-    .campaign-form select:focus {
-        /* Remove z-index on focus to let browser manage dropdown layering */
-        outline: none;
+    .success-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors;
     }
 
-    /* Ensure parent containers allow dropdowns to render outside */
-    .campaign-form .bg-gray-50,
-    .campaign-form .bg-gray-700,
-    .campaign-form .rounded-lg,
-    .campaign-form .border,
-    .campaign-form .shadow-sm {
-        overflow: visible !important;
-        contain: none;
-        position: relative;
-        z-index: auto;
+    .warning-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors;
     }
 
-    /* Ensure the main container allows dropdowns to render */
-    .max-w-6xl {
-        overflow: visible !important;
-        position: relative;
-        z-index: auto;
+    .danger-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors;
     }
 
-    /* Ensure nested containers don't clip dropdowns */
-    .campaign-form .space-y-6 > div,
-    .campaign-form .space-y-8 > div {
-        overflow: visible !important;
-        position: relative;
-        z-index: auto;
+    .disabled-btn {
+        @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors;
     }
 
-    /* Ensure the main form container allows overflow */
-    main {
-        overflow: visible !important;
-        position: relative;
-        z-index: auto;
+    .disabled-btn:hover {
+        @apply bg-gray-600 text-white cursor-not-allowed;
     }
-}
 
-.primary-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors;
-}
-
-.secondary-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors;
-}
-
-.success-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors;
-}
-
-.warning-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors;
-}
-
-.danger-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors;
-}
-
-.disabled-btn {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors;
-}
-
-.disabled-btn:hover {
-    @apply bg-gray-600 text-white cursor-not-allowed;
-}
-
-.btn-sm {
-    @apply inline-flex items-center px-2 py-1 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+    .btn-sm {
+        @apply inline-flex items-center px-2 py-1 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+    }
 }
 
 /* Base styles and utilities */
