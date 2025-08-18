@@ -48,7 +48,7 @@ This platform enables marketing teams and operators to:
 
 #### Database & Queue Management
 
-- **SQLite/MySQL** - Reliable database storage with Laravel's Eloquent ORM
+- **SQLite/PostgreSQL/MySQL** - Reliable database storage with Laravel's Eloquent ORM
 - **Laravel Horizon** - Queue monitoring and management dashboard
 - **Background Jobs** - Asynchronous campaign deployment processing
 
