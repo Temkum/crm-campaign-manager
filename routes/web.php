@@ -5,6 +5,8 @@ use App\Livewire\Admin\Campaigns\CampaignsIndex;
 use App\Livewire\Admin\Campaigns\CampaignManager;
 use App\Http\Controllers\Api\CampaignDeploymentController;
 use App\Livewire\Admin\Campaigns\CampaignDeploymentManager;
+use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\DashboardOverview;
 use App\Livewire\Admin\Websites\WebsitesComponent;
 use App\Livewire\Admin\Websites\AddWebsite;
 use App\Livewire\Admin\Websites\EditWebsite;
@@ -17,7 +19,7 @@ use App\Livewire\Admin\Operators\EditOperator;
 
 Route::view('/', 'welcome');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', Dashboard::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -68,6 +70,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/operators/create', AddOperator::class)->name('operators.create');
         Route::get('/operators/{operator}/edit', EditOperator::class)->name('operators.edit');
     });
+
+    Route::get('/health', function () {
+        return response()->json(['status' => 'ok']);
+    });
 });
 
 require __DIR__ . '/auth.php';
+
+// Fallback route for unmatched URIs -> show custom 404 page
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});
